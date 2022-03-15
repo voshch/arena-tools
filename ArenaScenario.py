@@ -39,12 +39,14 @@ class ArenaScenario:
         return scenario
 
     def loadFromDict(self, d: dict):
-        self.pedsimAgents = [PedsimAgent.fromDict(a) for a in d["pedsim_agents"]]
-        self.staticObstacles = [
-            FlatlandObject.fromDict(o) for o in d["static_obstacles"]
-        ]
+        self.pedsimAgents = [PedsimAgent.fromDict(
+            a) for a in d["pedsim_agents"]]
+        self.staticObstacles = [FlatlandObject.fromDict(
+            o) for o in d["static_obstacles"]]
+
         # self.interactiveObstacles = ...TODO
-        self.robotPosition = np.array([d["robot_position"][0], d["robot_position"][1]])
+        self.robotPosition = np.array(
+            [d["robot_position"][0], d["robot_position"][1]])
         self.robotGoal = np.array([d["robot_goal"][0], d["robot_goal"][1]])
         self.mapPath = get_current_user_path(d["map_path"])
         if ("resets") in d.keys():
@@ -75,8 +77,8 @@ class ArenaScenario:
                 yaml.dump(data, file, default_flow_style=None)
             else:
                 raise Exception(
-                    "wrong format. file needs to have 'json' or 'yaml' file ending."
-                )
+                    "wrong format. file needs to have 'json' or 'yaml' file ending.")
+
 
         return True
 
@@ -91,8 +93,8 @@ class ArenaScenario:
                     data = yaml.safe_load(f)
                 else:
                     raise Exception(
-                        "wrong format. file needs to have 'json' or 'yaml' file ending."
-                    )
+                        "wrong format. file needs to have 'json' or 'yaml' file ending.")
+
 
                 self.loadFromDict(data)
                 self.path = path_in
