@@ -1,7 +1,10 @@
 import numpy as np
+import rospkg
+import os
 from enum import Enum
 from FlatlandModel import FlatlandModel
 from HelperFunctions import *
+from constants import Constants
 
 class PedsimStartupMode(Enum):
     DEFAULT = 0
@@ -38,7 +41,7 @@ class PedsimInteractiveObstacle():
 
 
 class PedsimAgent():
-    def __init__(self, name = "", flatlandModelPath = "") -> None:
+    def __init__(self, name = "", flatland_model_path = "") -> None:
         self.name = name
 
         # set default values (derived from pedsim_msgs/Ped.msg)
@@ -46,9 +49,9 @@ class PedsimAgent():
         self.pos = np.zeros(2)
         self.type = "adult"
         self.yaml_file = ""
-        self.flatlandModel = None  # FlatlandModel instance
-        if flatlandModelPath != "":
-            self.loadFlatlandModel(flatlandModelPath)
+        self.flatland_model = None  # flatland_model instance
+        if flatland_model_path != "":
+            self.loadFlatlandModel(flatland_model_path)
         self.number_of_peds = 1
         self.vmax = 0.3 
 
@@ -86,7 +89,7 @@ class PedsimAgent():
         self.yaml_file = path
         model = FlatlandModel()
         model.load(path)
-        self.flatlandModel = model
+        self.flatland_model = model
 
     def __eq__(self, other):
         if not isinstance(other, PedsimAgent):
@@ -94,7 +97,7 @@ class PedsimAgent():
 
         if self.name != other.name:
             return False
-        if self.flatlandModel != other.flatlandModel:
+        if self.flatland_model != other.flatland_model:
             return False
 
         if self.id != other.id:
@@ -215,7 +218,7 @@ class PedsimAgent():
         a.id = d["id"]
         a.pos = np.array([d["pos"][0], d["pos"][1]])
         a.type = d["type"]
-        a.yaml_file = get_current_user_path(d["yaml_file"])
+        a.yaml_file = os.path.join(rospkg.RosPack().get_path(Constants.SIMULATION_SETUP_PACKAGE), d["yaml_file"])
         a.number_of_peds = d["number_of_peds"]
         a.vmax = d["vmax"]
 
