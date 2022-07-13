@@ -1,3 +1,9 @@
+import rospkg
+import os
+
+from constants import Constants
+
+
 def get_ros_package_path(package_name: str) -> str:
     try:
         import rospkg
@@ -87,3 +93,7 @@ def remove_file_ending(file_name: str) -> str:
     if file_ending_index != -1:
         return file_name[:file_ending_index]
     return file_name
+
+
+def get_simulation_setup_pkg_prefix(path: str) -> str:
+    return os.path.join(rospkg.RosPack().get_path(Constants.SIMULATION_SETUP_PACKAGE), path)
