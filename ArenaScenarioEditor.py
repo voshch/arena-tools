@@ -413,7 +413,7 @@ class FlatlandObjectWidget(QtWidgets.QFrame):
 
 
     def onBrowseClicked(self):
-        default_folder = get_ros_package_path("simulator_setup")
+        default_folder = get_simulation_setup_pkg_prefix("")
         if default_folder != "":
             default_folder = os.path.join(default_folder, "obstacles")
         res = QtWidgets.QFileDialog.getOpenFileName(self, "Select Flatland Model File", default_folder)
@@ -715,7 +715,7 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
             w.handleEditorSaved()
 
     def onSetMapClicked(self):
-        initial_folder = os.path.join(get_ros_package_path("simulator_setup"), "maps")
+        initial_folder = get_simulation_setup_pkg_prefix("maps")
         res = QtWidgets.QFileDialog.getOpenFileName(parent=self, directory=initial_folder)
         path = res[0]
         if path != "":
@@ -880,7 +880,7 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
         pass
 
     def onOpenClicked(self):
-        initial_folder = os.path.join(get_ros_package_path("simulator_setup"), "scenarios")
+        initial_folder = os.path.join(get_ros_package_path("task-generator"), "scenarios")
         res = QtWidgets.QFileDialog.getOpenFileName(parent=self, directory=initial_folder)
         path = res[0]
         if path != "":
@@ -892,7 +892,7 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
             self.onSaveAsClicked()
 
     def onSaveAsClicked(self) -> bool:
-        initial_folder = os.path.join(get_ros_package_path("simulator_setup"), "scenarios")
+        initial_folder = os.path.join(get_ros_package_path("task-generator"), "scenarios")
 
         res = QtWidgets.QFileDialog.getSaveFileName(parent=self, directory=initial_folder)
         path = res[0]
