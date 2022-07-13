@@ -503,8 +503,8 @@ class main_window(QMainWindow):
         self.window.setWindowIcon(icon)
         
         ### add diffrent buttons to the main window and link them to functions ###
-        self.button1 = QPushButton('Edit Training Curriculum')
-        self.button1.clicked.connect(self.on_button1_clicked)
+        # self.button1 = QPushButton('Edit Training Curriculum')
+        # self.button1.clicked.connect(self.on_button1_clicked)
         self.button2 = QPushButton('Flatland Model Editor')
         self.button2.clicked.connect(self.on_button2_clicked)
         self.button3 = QPushButton('Arena Scenario Editor')
@@ -514,7 +514,7 @@ class main_window(QMainWindow):
        
         ### add the layout of the main window ###
         layout = QVBoxLayout()
-        layout.addWidget(self.button1)
+        # layout.addWidget(self.button1)
         layout.addWidget(self.button2)
         layout.addWidget(self.button3)
         layout.addWidget(self.button4)
