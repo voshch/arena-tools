@@ -271,7 +271,7 @@ class MapGenerator(QtWidgets.QMainWindow):
         layout_index += 1
         self.folder_edit = QtWidgets.QLineEdit("Please select folder")
         # set default path to simulator_setup/maps if it exists
-        sim_setup_path = get_ros_package_path("simulator_setup")
+        sim_setup_path = get_simulation_setup_pkg_prefix("")
         if sim_setup_path != "":
             self.folder_edit.setText(os.path.join(sim_setup_path, "maps"))
         frame.layout().addWidget(self.folder_edit, layout_index, 0, 1, -1)

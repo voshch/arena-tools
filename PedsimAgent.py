@@ -1,7 +1,11 @@
 import numpy as np
+import rospkg
+import os
 from enum import Enum
 from FlatlandModel import FlatlandModel
 from HelperFunctions import *
+from constants import Constants
+
 
 class PedsimStartupMode(Enum):
     DEFAULT = 0
@@ -9,11 +13,9 @@ class PedsimStartupMode(Enum):
     TRIGGER_ZONE = 2
 
 
-
 class PedsimWaypointMode(Enum):
     LOOP = 0
     RANDOM = 1
-
 
 
 class PedsimAgentType(Enum):
@@ -24,21 +26,18 @@ class PedsimAgentType(Enum):
     SERVICEROBOT = 4
 
 
-
 class InteractiveObstacleType(Enum):
     SHELF = 0
 
 
-
-class PedsimInteractiveObstacle():
+class PedsimInteractiveObstacle:
     def __init__(self):
         self.obstacleType = InteractiveObstacleType.SHELF
         #   TODO...
 
 
-
-class PedsimAgent():
-    def __init__(self, name = "", flatlandModelPath = "") -> None:
+class PedsimAgent:
+    def __init__(self, name="", flatlandModelPath="") -> None:
         self.name = name
 
         # set default values (derived from pedsim_msgs/Ped.msg)
@@ -46,11 +45,11 @@ class PedsimAgent():
         self.pos = np.zeros(2)
         self.type = "adult"
         self.yaml_file = ""
-        self.flatlandModel = None  # FlatlandModel instance
+        self.flatlandModel = None  # flatlandModel instance
         if flatlandModelPath != "":
             self.loadFlatlandModel(flatlandModelPath)
         self.number_of_peds = 1
-        self.vmax = 0.3 
+        self.vmax = 0.3
 
         self.start_up_mode = "default"
         self.wait_time = 0.0
@@ -119,15 +118,25 @@ class PedsimAgent():
             return False
         if not np.allclose(self.tell_story_probability, other.tell_story_probability):
             return False
-        if not np.allclose(self.group_talking_probability, other.group_talking_probability):
+        if not np.allclose(
+            self.group_talking_probability, other.group_talking_probability
+        ):
             return False
-        if not np.allclose(self.talking_and_walking_probability, other.talking_and_walking_probability):
+        if not np.allclose(
+            self.talking_and_walking_probability, other.talking_and_walking_probability
+        ):
             return False
-        if not np.allclose(self.requesting_service_probability, other.requesting_service_probability):
+        if not np.allclose(
+            self.requesting_service_probability, other.requesting_service_probability
+        ):
             return False
-        if not np.allclose(self.requesting_guide_probability, other.requesting_guide_probability):
+        if not np.allclose(
+            self.requesting_guide_probability, other.requesting_guide_probability
+        ):
             return False
-        if not np.allclose(self.requesting_follower_probability, other.requesting_follower_probability):
+        if not np.allclose(
+            self.requesting_follower_probability, other.requesting_follower_probability
+        ):
             return False
         if not np.allclose(self.max_talking_distance, other.max_talking_distance):
             return False
@@ -139,11 +148,17 @@ class PedsimAgent():
             return False
         if not np.allclose(self.group_talking_base_time, other.group_talking_base_time):
             return False
-        if not np.allclose(self.talking_and_walking_base_time, other.talking_and_walking_base_time):
+        if not np.allclose(
+            self.talking_and_walking_base_time, other.talking_and_walking_base_time
+        ):
             return False
-        if not np.allclose(self.receiving_service_base_time, other.receiving_service_base_time):
+        if not np.allclose(
+            self.receiving_service_base_time, other.receiving_service_base_time
+        ):
             return False
-        if not np.allclose(self.requesting_service_base_time, other.requesting_service_base_time):
+        if not np.allclose(
+            self.requesting_service_base_time, other.requesting_service_base_time
+        ):
             return False
         if not np.allclose(self.force_factor_desired, other.force_factor_desired):
             return False
@@ -155,7 +170,9 @@ class PedsimAgent():
             return False
         if len(self.waypoints) != len(other.waypoints):
             return False
-        if not np.all([np.allclose(wpa, wpb) for wpa, wpb in zip(self.waypoints, other.waypoints)]):
+        if not np.all(
+            [np.allclose(wpa, wpb) for wpa, wpb in zip(self.waypoints, other.waypoints)]
+        ):
             return False
         if self.waypoint_mode != other.waypoint_mode:
             return False
@@ -166,7 +183,7 @@ class PedsimAgent():
         d = {}
 
         d["name"] = self.name
-        
+
         d["id"] = self.id
         d["pos"] = [float(val) for val in self.pos]
         d["type"] = self.type
@@ -207,15 +224,18 @@ class PedsimAgent():
         return d
 
     @staticmethod
-    def fromDict(d : dict):
+    def fromDict(d: dict):
         a = PedsimAgent(d["name"], d["yaml_file"])
 
         a.name = d["name"]
-    
+
         a.id = d["id"]
         a.pos = np.array([d["pos"][0], d["pos"][1]])
         a.type = d["type"]
-        a.yaml_file = get_current_user_path(d["yaml_file"])
+        a.yaml_file = os.path.join(
+            rospkg.RosPack().get_path(Constants.SIMULATION_SETUP_PACKAGE),
+            d["yaml_file"],
+        )
         a.number_of_peds = d["number_of_peds"]
         a.vmax = d["vmax"]
 
