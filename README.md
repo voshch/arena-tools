@@ -15,9 +15,9 @@ pip install PyQt5 --upgrade
 ```
 If you wish to use our 2D map to 3D Gazebo world functionality follow these 2 additional steps:  
 \
-Install potrace to convert pgm images to SVG format:
+Install potrace and imagemagick to convert png/pgm images to SVG format:
 ```bash
-sudo apt-get install potrace
+sudo apt-get install potrace imagemagick
 ```
 Install Blender according to [documentation](https://docs.blender.org/manual/en/latest/getting_started/installing/linux.html), making sure that it can be run from the terminal.  
 Note: This feature was tested with Blender v3.1
