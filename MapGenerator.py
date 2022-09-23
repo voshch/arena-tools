@@ -370,15 +370,29 @@ class MapGenerator(QtWidgets.QMainWindow):
             map_image = curr_path / map_yaml["image"]
             # If map is in png format, first convert to pgm then to SVG
             if str(map_image).endswith(".png"):
-                subprocess.call(
-                    f"convert {str(map_image)} -flatten {str(curr_path)}/map.pgm",
+                try:
+                    subprocess.run(
+                        f"convert {str(map_image)} -flatten {str(curr_path)}/map.pgm",
+                        check=True,
+                        shell=True,
+                    )
+                except subprocess.CalledProcessError as e:
+                    print(e)
+                    print(
+                        "Make sure you followed the README installation instructions and imagemagick is properly working on your system."
+                    )
+            map_pgm = curr_path / "map.pgm"
+            try:
+                subprocess.run(
+                    f"potrace -s {str(map_pgm)} -o {str(curr_path)}/output.svg --flat",
+                    check=True,
                     shell=True,
                 )
-            map_pgm = curr_path / "map.pgm"
-            subprocess.call(
-                f"potrace -s {str(map_pgm)} -o {str(curr_path)}/output.svg --flat",
-                shell=True,
-            )
+            except subprocess.CalledProcessError as e:
+                print(e)
+                print(
+                    "Make sure you followed the README installation instructions and potrace is properly working on your system."
+                )
             # Get map width and height
             img = Image.open(map_pgm)
             width, height = img.size
@@ -393,10 +407,17 @@ class MapGenerator(QtWidgets.QMainWindow):
             os.makedirs(out_path, exist_ok=True)
 
             # Calling blender to convert the image into a mesh
-            subprocess.call(
-                f"blender --background --python blender.py -- {width * scale} {height * scale} {curr_path} {out_path}",
-                shell=True,
-            )
+            try:
+                subprocess.run(
+                    f"blender --background --python blender.py -- {width * scale} {height * scale} {curr_path} {out_path}",
+                    check=True,
+                    shell=True,
+                )
+            except subprocess.CalledProcessError as e:
+                print(e)
+                print(
+                    "Make sure you followed the README installation instructions and blender is properly installed and recognized as terminal command."
+                )
 
             # Saving the mesh as a model in our collection
             # model_path = (
@@ -427,9 +448,9 @@ class MapGenerator(QtWidgets.QMainWindow):
                 curr_path, "map.yaml", True, ped_scenario_path, map_names + ".xml"
             )
             # Delete temporary .pgm and/or svg file
-            subprocess.call(f"rm {curr_path}/output.svg", shell=True)
+            subprocess.run(f"rm {curr_path}/output.svg", shell=True)
             if str(map_image).endswith(".png"):
-                subprocess.call(f"rm {curr_path}/map.pgm", shell=True)
+                subprocess.run(f"rm {curr_path}/map.pgm", shell=True)
 
     def onGenerateMapsClicked(self):
         # generate maps
