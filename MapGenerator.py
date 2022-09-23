@@ -377,46 +377,52 @@ class MapGenerator(QtWidgets.QMainWindow):
             # Get map width and height
             img = Image.open(map_png)
             width, height = img.size
-            
+
             # Create output directory
             out_path = (
-                get_ros_package_path("simulator_setup")
+                get_ros_package_path("arena-simulation-setup")
                 + "/worlds/"
                 + map_names
                 + "/worlds/"
             )
             os.makedirs(out_path, exist_ok=True)
-            
+
             # Calling blender to convert the image into a mesh
-            subprocess.call(f"blender --background --python blender.py -- {width * scale} {height * scale} {curr_path} {out_path}", shell=True)
-            
+            subprocess.call(
+                f"blender --background --python blender.py -- {width * scale} {height * scale} {curr_path} {out_path}",
+                shell=True,
+            )
+
             # Saving the mesh as a model in our collection
-            model_path = (
-                get_ros_package_path("simulator_setup") + "/models/" + map_names + "/"
-            )
-            os.makedirs(model_path, exist_ok=True)
-            os.makedirs(model_path + "meshes/", exist_ok=True)
+            # model_path = (
+            #     get_ros_package_path("simulator_setup") + "/models/" + map_names + "/"
+            # )
+            # os.makedirs(model_path, exist_ok=True)
+            # os.makedirs(model_path + "meshes/", exist_ok=True)
             # Copy mesh file
-            shutil.copy(
-                out_path + "map.dae",
-                model_path + "meshes/" + map_names + ".dae",
-            )
+            # shutil.copy(
+            #     out_path + "map.dae",
+            #     model_path + "meshes/" + map_names + ".dae",
+            # )
             # Create model config file
-            create_model_config(model_path, map_names)
-            create_model_sdf(model_path, map_names)
-            
+            # create_model_config(model_path, map_names)
+            # create_model_sdf(model_path, map_names)
+
             # Create world file
-            createWorldFile(out_path, map_names, width * scale / 2.0, height * scale / 2.0)
+            createWorldFile(
+                out_path, map_names, width * scale / 2.0, height * scale / 2.0
+            )
             # Create pedsim obstacles file
             ped_scenario_path = (
-                get_ros_package_path("simulator_setup") + "/scenarios/ped_scenarios/"
+                get_ros_package_path("arena-simulation-setup")
+                + f"/worlds/{map_names}/ped_scenarios/"
             )
+            os.makedirs(ped_scenario_path, exist_ok=True)
             createObstacleFile(
                 curr_path, "map.yaml", True, ped_scenario_path, map_names + ".xml"
             )
             # Delete temporary svg file
             subprocess.call(f"rm {curr_path}/output.svg", shell=True)
-            
 
     def onGenerateMapsClicked(self):
         # generate maps
