@@ -14,7 +14,7 @@ def get_nth_decimal_part(x: float, n: int) -> int:
     Example:
         get_nth_decimal_part(1.234, 2) == 3
     """
-    x *= 10**n  # push relevant part directly in front of decimal point
+    x *= 10 ** n  # push relevant part directly in front of decimal point
     x %= 10  # remove parts left of the relevant part
     return int(x)  # remove decimal places
 
@@ -364,7 +364,7 @@ def createObstacleFile(
     scenario, map_walls = scenario_from_map(map_image, map_metadata, use_map_origin)
 
     # uncomment for a visualization of where the obstacles have been placed
-    io.imsave(os.path.join(scenario_path, "walls.png"), map_walls * 255)
+    # io.imsave(os.path.join(scenario_path, "walls.png"), map_walls * 255)
 
     print("Writing scene in " + os.path.join(scenario_path, scenario_name) + "...")
 

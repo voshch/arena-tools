@@ -354,7 +354,7 @@ class MapGenerator(QtWidgets.QMainWindow):
         return [f"map{i}" for i in range(max_index + 1, max_index + 1 + number_of_maps)]
 
     def onConvertMapsClicked(self):
-        folder = pathlib.Path(get_ros_package_path("simulator_setup") + "/maps/")
+        folder = pathlib.Path(get_ros_package_path("arena-simulation-setup") + "/maps/")
         map_folders = [p for p in folder.iterdir() if p.is_dir()]
         names = [p.parts[-1] for p in map_folders]
         # get only the names that are in the form of f"map{index}"
@@ -367,15 +367,20 @@ class MapGenerator(QtWidgets.QMainWindow):
             with open(curr_path / "map.yaml", "r") as stream:
                 map_yaml = yaml.safe_load(stream)
             scale = map_yaml["resolution"]
-            # Setting map.pgm path
-            map_png = curr_path / "map.pgm"
-            # Convert map.pgm to SVG format
+            map_image = curr_path / map_yaml["image"]
+            # If map is in png format, first convert to pgm then to SVG
+            if str(map_image).endswith(".png"):
+                subprocess.call(
+                    f"convert {str(map_image)} -flatten {str(curr_path)}/map.pgm",
+                    shell=True,
+                )
+            map_pgm = curr_path / "map.pgm"
             subprocess.call(
-                f"potrace -s {str(map_png)} -o {str(curr_path)}/output.svg --flat",
+                f"potrace -s {str(map_pgm)} -o {str(curr_path)}/output.svg --flat",
                 shell=True,
             )
             # Get map width and height
-            img = Image.open(map_png)
+            img = Image.open(map_pgm)
             width, height = img.size
 
             # Create output directory
@@ -421,8 +426,10 @@ class MapGenerator(QtWidgets.QMainWindow):
             createObstacleFile(
                 curr_path, "map.yaml", True, ped_scenario_path, map_names + ".xml"
             )
-            # Delete temporary svg file
+            # Delete temporary .pgm and/or svg file
             subprocess.call(f"rm {curr_path}/output.svg", shell=True)
+            if str(map_image).endswith(".png"):
+                subprocess.call(f"rm {curr_path}/map.pgm", shell=True)
 
     def onGenerateMapsClicked(self):
         # generate maps
