@@ -20,7 +20,7 @@ def get_nth_decimal_part(x: float, n: int) -> int:
     Example:
         get_nth_decimal_part(1.234, 2) == 3
     """
-    x *= 10 ** n  # push relevant part directly in front of decimal point
+    x *= 10**n  # push relevant part directly in front of decimal point
     x %= 10  # remove parts left of the relevant part
     return int(x)  # remove decimal places
 
@@ -102,6 +102,12 @@ def remove_file_ending(file_name: str) -> str:
     if file_ending_index != -1:
         return file_name[:file_ending_index]
     return file_name
+
+
+def get_simulation_setup_pkg_prefix(path: str) -> str:
+    return os.path.join(
+        rospkg.RosPack().get_path(Constants.SIMULATION_SETUP_PACKAGE), path
+    )
 
 
 def create_model_config(path_in: str, model_name: str):
