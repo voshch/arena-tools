@@ -368,6 +368,7 @@ class MapGenerator(QtWidgets.QMainWindow):
                 map_yaml = yaml.safe_load(stream)
             scale = map_yaml["resolution"]
             map_image = curr_path / map_yaml["image"]
+            origin = map_yaml["origin"]
             # If map is in png format, first convert to pgm then to SVG
             if str(map_image).endswith(".png"):
                 try:
@@ -435,9 +436,7 @@ class MapGenerator(QtWidgets.QMainWindow):
             # create_model_sdf(model_path, map_names)
 
             # Create world file
-            createWorldFile(
-                out_path, map_names, width * scale / 2.0, height * scale / 2.0
-            )
+            createWorldFile(out_path, map_names, origin[0], origin[1])
             # Create pedsim obstacles file
             ped_scenario_path = (
                 get_ros_package_path("arena-simulation-setup")
