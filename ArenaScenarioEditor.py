@@ -630,7 +630,7 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
         self.lastNameId = 0
 
         # set default map to empty map if it exists
-        path = pathlib.Path(get_ros_package_path("simulator_setup")) / "maps" / "map_empty" / "map.yaml"
+        path = pathlib.Path(get_ros_package_path("arena-simulation-setup")) / "maps" / "map_empty" / "map.yaml"
         if path.is_file():
             self.setMap(str(path))
 
@@ -749,7 +749,7 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
     def onAddPedsimAgentClicked(self):
         yaml_file = ""
         try:
-            yaml_file = os.path.join(get_ros_package_path("simulator_setup"), "dynamic_obstacles", "person_two_legged.model.yaml")
+            yaml_file = os.path.join(get_ros_package_path("arena-simulation-setup"), "dynamic_obstacles", "person_two_legged.model.yaml")
         except:
             pass
 
@@ -770,7 +770,7 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
     def onAddFlatlandObjectClicked(self):
         model_path = ""
         try:
-            model_path = os.path.join(get_ros_package_path("simulator_setup"), "obstacles", "shelf.yaml")
+            model_path = os.path.join(get_ros_package_path("arena-simulation-setup"), "obstacles", "shelf.yaml")
         except:
             pass
 
