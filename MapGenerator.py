@@ -373,7 +373,7 @@ class MapGenerator(QtWidgets.QMainWindow):
             if str(map_image).endswith(".png"):
                 try:
                     subprocess.run(
-                        f"convert {str(map_image)} -flatten {str(curr_path)}/map.pgm",
+                        f"convert {str(map_image)} {str(curr_path)}/map.pgm",
                         check=True,
                         shell=True,
                     )
