@@ -1,4 +1,11 @@
 # Create a Gazebo map from the occupancy map
+Quick note before following these instructions make sure, that your desired map image does not contain expendable pixels around the border, like in the following picture. These pixels will not be a part of the resulting mesh, but they influence it's dimensions, as our script reads the image's height and width. If these borders are big enough, the outcome will be a misaligned world with respect to the map. In order to avoid this problem, you can try trimming the map image with Imagemagick like this, to overwrite the existing image:
+```bash
+convert map_image -trim map_image
+```
+  
+<img src="https://i.ibb.co/g92KsHX/image.png" alt="image" border="0" style="width:250px;height:250px;">
+
 Creating a Gazebo map from the 2D occupancy map, created by *arena-tools* can be broken down into six steps
 
 ❶ [Transform the `pgm` file into an `svg`](#1-transform-the-pgm-file-into-an-svg)
