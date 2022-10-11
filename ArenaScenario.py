@@ -27,7 +27,7 @@ class ArenaScenario:
         d["robot_position"] = [float(value) for value in self.robotPosition]
         d["robot_goal"] = [float(value) for value in self.robotGoal]
         d["resets"] = self.resets
-        d["map_path"] = self.mapPath
+        d["map_path"] = delete_map_path_prefix(self.mapPath)
         d["format"] = "arena-tools"
 
         return d
@@ -47,7 +47,7 @@ class ArenaScenario:
         self.robotPosition = np.array(
             [d["robot_position"][0], d["robot_position"][1]])
         self.robotGoal = np.array([d["robot_goal"][0], d["robot_goal"][1]])
-        self.mapPath = d["map_path"] # get_current_user_path(d["map_path"])
+        self.mapPath = add_map_path_prefix(d["map_path"])
         if ("resets") in d.keys():
             self.resets = d["resets"]
         else:
