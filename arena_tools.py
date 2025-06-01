@@ -14,6 +14,7 @@ import numpy as np
 import copy
 from FlatlandModelEditor import FlatlandModelEditor
 from ArenaScenarioEditor import ArenaScenarioEditor
+from ZonesEditor import ZonesEditor
 
 
 def get_value_qspin_box(x) :
@@ -511,6 +512,8 @@ class main_window(QMainWindow):
         self.button3.clicked.connect(self.on_button3_clicked)
         self.button4 = QPushButton('Map Generator')
         self.button4.clicked.connect(self.on_button4_clicked)
+        self.button5 = QPushButton('Zones Editor')
+        self.button5.clicked.connect(self.on_button5_clicked)
        
         ### add the layout of the main window ###
         layout = QVBoxLayout()
@@ -518,6 +521,7 @@ class main_window(QMainWindow):
         layout.addWidget(self.button2)
         layout.addWidget(self.button3)
         layout.addWidget(self.button4)
+        layout.addWidget(self.button5)
         self.window.setLayout(layout)
         self.show()
 
@@ -555,7 +559,14 @@ class main_window(QMainWindow):
         else:
             self.w.close()  # Close window.
             self.w = None  # Discard reference.
-     
+    
+    def on_button5_clicked(self, checked):
+        if self.w is None:
+            self.map_generator_window = ZonesEditor()
+            self.map_generator_window.show()
+        else:
+            self.w.close()  # Close window.
+            self.w = None  # Discard reference.
 
         
 

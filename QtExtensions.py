@@ -309,6 +309,43 @@ class WaypointGraphicsEllipseItem(ArenaGraphicsEllipseItem):
     def remove(self):
         self.waypointWidget.remove()
 
+class PointGraphicsEllipseItem(ArenaGraphicsEllipseItem):
+    '''
+    This item is meant to visualize a waypoint and is connected to a parent PointWidget.
+    '''
+    def __init__(self, pointWidget, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.pointWidget = pointWidget
+
+        # set color
+        brush = QtGui.QBrush(QtGui.QColor(139, 137, 138), QtCore.Qt.BrushStyle.SolidPattern)
+        self.setBrush(brush)
+
+        self.keyPressEater = KeyPressEater(self.handleEvent)
+
+    def setPosNoEvent(self, x, y):
+        super().setPosNoEvent(x, y)
+        self.pointWidget.polygonWidget.drawPolygon()
+
+    def itemChange(self, change, value):
+        if change == QtWidgets.QGraphicsItem.GraphicsItemChange.ItemPositionChange:
+            self.pointWidget.updateSpinBoxesFromGraphicsItem()
+            self.pointWidget.polygonWidget.drawPolygon()
+
+        return super().itemChange(change, value)
+
+    def handleEvent(self, event):
+        if (event.type() == QtCore.QEvent.Type.KeyRelease
+            and event.key() == QtCore.Qt.Key.Key_Delete
+            and self.isSelected()):
+            self.remove()
+            return True
+
+        return False
+
+    def remove(self):
+        self.pointWidget.remove()
+
 
 class SubgoalEllipseItem(ArenaGraphicsEllipseItem):
     '''
@@ -466,19 +503,14 @@ class ArenaQGraphicsPolygonItem(QtWidgets.QGraphicsPolygonItem):
 
         return super().hoverMoveEvent(move_event)
 
-
-
-class ActiveModeWindow(QtWidgets.QMessageBox):
+class ModeWindow(QtWidgets.QMessageBox):
     '''
     A Window that pops up to indicate that a special mode has been activated.
     In this case it's the "Add Waypoints Mode".
     '''
-    def __init__(self, connectedWidget, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.connectedWidget = connectedWidget
         self.setIcon(QtWidgets.QMessageBox.Icon.Information)
-        self.setWindowTitle("Add Waypoints...")
-        self.setText("Click anywhere on the map to add a waypoint.\nPress ESC to finish.")
         self.setWindowModality(QtCore.Qt.WindowModality.NonModal)
         self.setWindowFlag(QtCore.Qt.WindowType.WindowStaysOnTopHint, True)
         self.move(1000, 180)
@@ -494,10 +526,37 @@ class ActiveModeWindow(QtWidgets.QMessageBox):
         return super().closeEvent(event)
 
     def disable(self):
+        self.hide()
+
+class ActiveModeWindow(ModeWindow):
+    '''
+    A Window that pops up to indicate that a special mode has been activated.
+    In this case it's the "Add Waypoints Mode".
+    '''
+    def __init__(self, connectedWidget, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.connectedWidget = connectedWidget
+        self.setWindowTitle("Add Waypoints...")
+        self.setText("Click anywhere on the map to add a waypoint.\nPress ESC to finish.")
+
+    def disable(self):
         self.connectedWidget.addWaypointModeActive = False
         self.hide()
 
+class ActiveModePointWindow(ModeWindow):
+    '''
+    A Window that pops up to indicate that a special mode has been activated.
+    In this case it's the "Add Points Mode".
+    '''
+    def __init__(self, connectedWidget, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.connectedWidget = connectedWidget
+        self.setWindowTitle("Add Points...")
+        self.setText("Click anywhere on the map to add a point.\nPress ESC to finish.")
 
+    def disable(self):
+        self.connectedWidget.setAddPointMode(False)
+        self.hide()
 
 class Line(QtWidgets.QFrame):
     '''
@@ -685,7 +744,7 @@ class ArenaQGraphicsView(QtWidgets.QGraphicsView):
         self.setDragMode(QtWidgets.QGraphicsView.DragMode.ScrollHandDrag)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
-        self.setSceneRect(-200, -200, 400, 400)
+        self.setSceneRect(-100, -100, 200, 200)
         self.zoomFactor = 1.0
         self.setViewportUpdateMode(QtWidgets.QGraphicsView.ViewportUpdateMode.FullViewportUpdate)
 
