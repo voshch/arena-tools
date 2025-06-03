@@ -1,6 +1,7 @@
 from PyQt5 import QtGui, QtCore, QtWidgets
-from FlatlandModel import *
-from QtExtensions import *
+from .FlatlandModel import *
+from ...utils.QtExtensions import *
+
 
 class FootprintWidget(QtWidgets.QFrame):
     index = 0
@@ -27,12 +28,12 @@ class FootprintWidget(QtWidgets.QFrame):
         widget.setLayout(QtWidgets.QHBoxLayout())
         widget.setSizePolicy(QtWidgets.QSizePolicy.Policy.Maximum, QtWidgets.QSizePolicy.Policy.Maximum)
         self.layout().addWidget(widget)
-        ## label
+        # label
         self.name_label = QtWidgets.QLabel("Polygon " + str(self.index))
         self.name_label.setFixedHeight(20)
         self.name_label.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         widget.layout().addWidget(self.name_label)
-        ## delete button
+        # delete button
         button_delete = QtWidgets.QPushButton("delete")
         button_delete.clicked.connect(self.on_delete_clicked)
         widget.layout().addWidget(button_delete)
@@ -42,10 +43,10 @@ class FootprintWidget(QtWidgets.QFrame):
         widget.setLayout(QtWidgets.QHBoxLayout())
         widget.setSizePolicy(QtWidgets.QSizePolicy.Policy.Maximum, QtWidgets.QSizePolicy.Policy.Maximum)
         self.layout().addWidget(widget)
-        ## label
+        # label
         layers_label = QtWidgets.QLabel("layers:")
         widget.layout().addWidget(layers_label)
-        ## line edit
+        # line edit
         self.layers_line_edit = QtWidgets.QLineEdit("static")
         widget.layout().addWidget(self.layers_line_edit)
 
@@ -57,11 +58,11 @@ class FootprintWidget(QtWidgets.QFrame):
         # buttons for adjusting number of points in polygon
         button_widget = QtWidgets.QWidget()
         button_widget.setLayout(QtWidgets.QHBoxLayout())
-        ## +
+        # +
         button_plus = QtWidgets.QPushButton("+")
         button_plus.clicked.connect(lambda x: self.add_point())
         button_widget.layout().addWidget(button_plus)
-        ## -
+        # -
         button_minus = QtWidgets.QPushButton("-")
         button_minus.clicked.connect(self.remove_point)
         button_widget.layout().addWidget(button_minus)
@@ -84,14 +85,14 @@ class FootprintWidget(QtWidgets.QFrame):
         self.points_frame.layout().addWidget(widget)
 
         # x value
-        ## label
+        # label
         x_label = QtWidgets.QLabel("x")
         widget.layout().addWidget(x_label)
-        ## spinbox
+        # spinbox
         x_spinbox = ArenaQDoubleSpinBox()
         x_spinbox.setMinimum(-100.0)
         x_spinbox.setSingleStep(0.1)
-        if point != None:
+        if point is not None:
             x_spinbox.setValue(point.x())
         else:
             x_spinbox.setValue(0.0)
@@ -101,14 +102,14 @@ class FootprintWidget(QtWidgets.QFrame):
         widget.layout().addWidget(x_spinbox)
 
         # y value
-        ## label
+        # label
         y_label = QtWidgets.QLabel("y")
         widget.layout().addWidget(y_label)
-        ## spinbox
+        # spinbox
         y_spinbox = ArenaQDoubleSpinBox()
         y_spinbox.setMinimum(-100.0)
         y_spinbox.setSingleStep(0.1)
-        if point != None:
+        if point is not None:
             y_spinbox.setValue(point.y())
         else:
             y_spinbox.setValue(0.0)
@@ -158,7 +159,7 @@ class FlatlandBodyEditor(QtWidgets.QWidget):
         self.flatland_body = None
         self.setup_ui()
         self.set_flatland_body(flatland_body)  # needs to be called after setup_ui
-    
+
     def setup_ui(self):
         self.setWindowTitle("Flatland Body Editor")
         self.setLayout(QtWidgets.QGridLayout())
@@ -167,21 +168,21 @@ class FlatlandBodyEditor(QtWidgets.QWidget):
         self.move(200, 200)
 
         # name
-        ## label
+        # label
         name_label = QtWidgets.QLabel("### Name")
         name_label.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.layout().addWidget(name_label, 0, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ## editbox
+        # editbox
         self.name_edit = QtWidgets.QLineEdit("new_body")
         self.name_edit.setFixedSize(150, 30)
         self.layout().addWidget(self.name_edit, 0, 1, QtCore.Qt.AlignmentFlag.AlignRight)
 
         # type
-        ## label
+        # label
         type_label = QtWidgets.QLabel("### Type")
         type_label.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.layout().addWidget(type_label, 1, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ## dropdown
+        # dropdown
         self.type_dropdown = QtWidgets.QComboBox()
         for body_type in B2BodyType:
             self.type_dropdown.insertItem(body_type.value, body_type.name.lower())
@@ -189,7 +190,7 @@ class FlatlandBodyEditor(QtWidgets.QWidget):
         self.layout().addWidget(self.type_dropdown, 1, 1, QtCore.Qt.AlignmentFlag.AlignRight)
 
         # color
-        ## label
+        # label
         color_label = QtWidgets.QLabel("### Color")
         color_label.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.layout().addWidget(color_label, 2, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
@@ -203,11 +204,11 @@ class FlatlandBodyEditor(QtWidgets.QWidget):
         self.layout().addWidget(self.color_button, 2, 1, QtCore.Qt.AlignmentFlag.AlignRight)
 
         # linear damping
-        ## label
+        # label
         linear_damping_label = QtWidgets.QLabel("### Linear Damping")
         linear_damping_label.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.layout().addWidget(linear_damping_label, 3, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ## spinbox
+        # spinbox
         self.linear_damping_spin_box = QtWidgets.QDoubleSpinBox()
         self.linear_damping_spin_box.setValue(0.0)
         self.linear_damping_spin_box.setSingleStep(0.1)
@@ -216,11 +217,11 @@ class FlatlandBodyEditor(QtWidgets.QWidget):
         self.layout().addWidget(self.linear_damping_spin_box, 3, 1, QtCore.Qt.AlignmentFlag.AlignRight)
 
         # angular damping
-        ## label
+        # label
         angular_damping_label = QtWidgets.QLabel("### Angular Damping")
         angular_damping_label.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.layout().addWidget(angular_damping_label, 4, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ## spinbox
+        # spinbox
         self.angular_damping_spin_box = QtWidgets.QDoubleSpinBox()
         self.angular_damping_spin_box.setValue(0.0)
         self.angular_damping_spin_box.setSingleStep(0.1)
@@ -229,14 +230,14 @@ class FlatlandBodyEditor(QtWidgets.QWidget):
         self.layout().addWidget(self.angular_damping_spin_box, 4, 1, QtCore.Qt.AlignmentFlag.AlignRight)
 
         # drawing frame
-        ## frame
+        # frame
         drawing_frame = QtWidgets.QFrame()
         drawing_frame.setLayout(QtWidgets.QVBoxLayout())
         drawing_frame.setFrameStyle(QtWidgets.QFrame.Shape.Box | QtWidgets.QFrame.Shadow.Raised)
         self.layout().addWidget(drawing_frame, 0, 2, 8, 1)
-        ## graphicsscene
+        # graphicsscene
         self.gscene = QtWidgets.QGraphicsScene()
-        ## graphicsview
+        # graphicsview
         self.gview = ArenaQGraphicsView(self.gscene)
         drawing_frame.layout().addWidget(self.gview)
 
@@ -246,11 +247,11 @@ class FlatlandBodyEditor(QtWidgets.QWidget):
         self.layout().addWidget(self.add_polygon_button, 6, 0, 1, 2)
 
         # footprints
-        ## scrollarea
+        # scrollarea
         self.footprints_scrollarea = QtWidgets.QScrollArea(self)
         self.footprints_scrollarea.setWidgetResizable(True)
         self.layout().addWidget(self.footprints_scrollarea, 7, 0, 1, 2)
-        ## frame
+        # frame
         self.footprints_frame = QtWidgets.QFrame()
         self.footprints_frame.setLayout(QtWidgets.QVBoxLayout())
         spacer = QtWidgets.QSpacerItem(1, 1, vPolicy=QtWidgets.QSizePolicy.Policy.Expanding)
@@ -261,7 +262,6 @@ class FlatlandBodyEditor(QtWidgets.QWidget):
         self.save_button = QtWidgets.QPushButton("Save and Close")
         self.save_button.clicked.connect(self.on_save_clicked)
         self.layout().addWidget(self.save_button, 8, 0, 1, -1)
-
 
     def on_add_polygon_clicked(self):
         # create default polygon
@@ -276,7 +276,7 @@ class FlatlandBodyEditor(QtWidgets.QWidget):
         self.add_polygon_footprint(polygon, self.color_dialog.currentColor())
 
     def add_polygon_footprint(self, polygon: QtGui.QPolygonF, color: QtGui.QColor = None):
-        if color == None:
+        if color is None:
             color = self.color_dialog.currentColor()
         # create brush
         brush = QtGui.QBrush(color, QtCore.Qt.BrushStyle.SolidPattern)
@@ -299,7 +299,7 @@ class FlatlandBodyEditor(QtWidgets.QWidget):
         polygon_items = []
         for i in range(self.footprints_frame.layout().count()):
             w = self.footprints_frame.layout().itemAt(i).widget()
-            if w != None:
+            if w is not None:
                 polygon_items.append(w.polygon_item)
         return polygon_items
 
@@ -307,7 +307,7 @@ class FlatlandBodyEditor(QtWidgets.QWidget):
         widgets = []
         for i in range(self.footprints_frame.layout().count()):
             w = self.footprints_frame.layout().itemAt(i).widget()
-            if w != None:
+            if w is not None:
                 widgets.append(w)
         return widgets
 
@@ -424,5 +424,5 @@ class FlatlandBodyEditor(QtWidgets.QWidget):
             elif isinstance(fp, CircleFlatlandFootprint):
                 # TODO
                 pass
-        if self.flatland_body_widget != None:
+        if self.flatland_body_widget is not None:
             self.flatland_body_widget.name_label.setText(self.flatland_body.name)

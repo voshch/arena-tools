@@ -1,6 +1,7 @@
 from PyQt5 import QtGui, QtCore, QtWidgets
 import numpy as np
-from HelperFunctions import *
+from arena_tools.utils.HelperFunctions import *
+
 
 class KeyPressEater(QtCore.QObject):
     '''
@@ -9,6 +10,7 @@ class KeyPressEater(QtCore.QObject):
     All Events will be passed to the given handleEventFunction.
     It should return True if the event was handled otherwise False
     '''
+
     def __init__(self, handleEventFunction, *args, **kwargs):
         super().__init__(*args, **kwargs)
         app = QtWidgets.QApplication.instance()  # get current application
@@ -17,7 +19,6 @@ class KeyPressEater(QtCore.QObject):
 
     def eventFilter(self, obj: QtCore.QObject, event: QtCore.QEvent) -> bool:
         return self.handleEventFunction(event)
-        
 
 
 class ArenaGraphicsPathItem(QtWidgets.QGraphicsPathItem):
@@ -32,7 +33,7 @@ class ArenaGraphicsPathItem(QtWidgets.QGraphicsPathItem):
         self.setFlags(
             QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsSelectable |
             QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges
-            )
+        )
 
         self.isDragged = False
 
@@ -56,7 +57,7 @@ class ArenaGraphicsPathItem(QtWidgets.QGraphicsPathItem):
 
         # catch key presses for interacting with the item in the scene
         self.keyPressEater = KeyPressEater(self.handleEvent)
-        
+
         self.oldItemPos = self.scenePos()
 
     # Alternative version of updateTextItemPos().
@@ -143,7 +144,7 @@ class ArenaGraphicsPathItem(QtWidgets.QGraphicsPathItem):
         # delete item when selected and DELETE key pressed
         if (event.type() == QtCore.QEvent.Type.KeyRelease
             and event.key() == QtCore.Qt.Key.Key_Delete
-            and self.isSelected()):
+                and self.isSelected()):
             self.remove()
 
         # return false so event is not consumed and can be handled by other items aswell
@@ -153,14 +154,13 @@ class ArenaGraphicsPathItem(QtWidgets.QGraphicsPathItem):
         self.parentWidget.remove()
 
 
-
 class ArenaGraphicsEllipseItem(QtWidgets.QGraphicsEllipseItem):
     '''
     A QGraphicsEllipseItem that is connected to two QDoubleSpinBoxes
     that hold the position of this item.
     '''
 
-    def __init__(self, xSpinBox: QtWidgets.QDoubleSpinBox = None, ySpinBox: QtWidgets.QDoubleSpinBox = None, *args, handlePositionChangeMethod = None, **kwargs):
+    def __init__(self, xSpinBox: QtWidgets.QDoubleSpinBox = None, ySpinBox: QtWidgets.QDoubleSpinBox = None, *args, handlePositionChangeMethod=None, **kwargs):
         """
         args:
             - xSpinBox: a spin box for the X-coordinate that shall be connected to this item
@@ -172,7 +172,7 @@ class ArenaGraphicsEllipseItem(QtWidgets.QGraphicsEllipseItem):
         self.setFlags(
             QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsSelectable |
             QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges
-            )
+        )
         self.isDragged = False
 
         # set brush
@@ -220,7 +220,7 @@ class ArenaGraphicsEllipseItem(QtWidgets.QGraphicsEllipseItem):
 
     def itemChange(self, change, value):
         if change == QtWidgets.QGraphicsItem.GraphicsItemChange.ItemPositionChange:
-            if self.handlePositionChangeMethod != None:
+            if self.handlePositionChangeMethod is not None:
                 self.handlePositionChangeMethod(self.scenePos())
             self.updateTextItemPos()
             if self.xSpinBox is not None and self.ySpinBox is not None:
@@ -271,11 +271,11 @@ class ArenaGraphicsEllipseItem(QtWidgets.QGraphicsEllipseItem):
         return super().mouseReleaseEvent(mouse_event)
 
 
-
 class WaypointGraphicsEllipseItem(ArenaGraphicsEllipseItem):
     '''
     This item is meant to visualize a waypoint and is connected to a parent WaypointWidget.
     '''
+
     def __init__(self, waypointWidget, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.waypointWidget = waypointWidget
@@ -300,7 +300,7 @@ class WaypointGraphicsEllipseItem(ArenaGraphicsEllipseItem):
     def handleEvent(self, event):
         if (event.type() == QtCore.QEvent.Type.KeyRelease
             and event.key() == QtCore.Qt.Key.Key_Delete
-            and self.isSelected()):
+                and self.isSelected()):
             self.remove()
             return True
 
@@ -309,10 +309,12 @@ class WaypointGraphicsEllipseItem(ArenaGraphicsEllipseItem):
     def remove(self):
         self.waypointWidget.remove()
 
+
 class PointGraphicsEllipseItem(ArenaGraphicsEllipseItem):
     '''
     This item is meant to visualize a waypoint and is connected to a parent PointWidget.
     '''
+
     def __init__(self, pointWidget, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.pointWidget = pointWidget
@@ -337,7 +339,7 @@ class PointGraphicsEllipseItem(ArenaGraphicsEllipseItem):
     def handleEvent(self, event):
         if (event.type() == QtCore.QEvent.Type.KeyRelease
             and event.key() == QtCore.Qt.Key.Key_Delete
-            and self.isSelected()):
+                and self.isSelected()):
             self.remove()
             return True
 
@@ -351,6 +353,7 @@ class SubgoalEllipseItem(ArenaGraphicsEllipseItem):
     '''
     This item is meant to visualize a subgoal and is connected to a parent PathCreator.
     '''
+
     def __init__(self, pathCreator, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.pathCreator = pathCreator
@@ -374,7 +377,7 @@ class SubgoalEllipseItem(ArenaGraphicsEllipseItem):
     def handleEvent(self, event):
         if (event.type() == QtCore.QEvent.Type.KeyRelease
             and event.key() == QtCore.Qt.Key.Key_Delete
-            and self.isSelected()):
+                and self.isSelected()):
             self.remove()
             return True
 
@@ -390,12 +393,13 @@ class ArenaQGraphicsPolygonItem(QtWidgets.QGraphicsPolygonItem):
     that hold the position of this item.
     Each vertice of the polygon can be moved by dragging.
     '''
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setFlags(
             QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsSelectable |
             QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges
-            )
+        )
         self.setAcceptHoverEvents(True)
         self.footprint_widget = None
         # handles for resizing
@@ -422,7 +426,7 @@ class ArenaQGraphicsPolygonItem(QtWidgets.QGraphicsPolygonItem):
             if diff_len < min_diff:
                 min_diff = diff_len
                 selected_handle_idx = handle_idx
-                
+
         return selected_handle_idx
 
     def mousePressEvent(self, mouse_event):
@@ -503,11 +507,13 @@ class ArenaQGraphicsPolygonItem(QtWidgets.QGraphicsPolygonItem):
 
         return super().hoverMoveEvent(move_event)
 
+
 class ModeWindow(QtWidgets.QMessageBox):
     '''
     A Window that pops up to indicate that a special mode has been activated.
     In this case it's the "Add Waypoints Mode".
     '''
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setIcon(QtWidgets.QMessageBox.Icon.Information)
@@ -528,11 +534,13 @@ class ModeWindow(QtWidgets.QMessageBox):
     def disable(self):
         self.hide()
 
+
 class ActiveModeWindow(ModeWindow):
     '''
     A Window that pops up to indicate that a special mode has been activated.
     In this case it's the "Add Waypoints Mode".
     '''
+
     def __init__(self, connectedWidget, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.connectedWidget = connectedWidget
@@ -543,11 +551,13 @@ class ActiveModeWindow(ModeWindow):
         self.connectedWidget.addWaypointModeActive = False
         self.hide()
 
+
 class ActiveModePointWindow(ModeWindow):
     '''
     A Window that pops up to indicate that a special mode has been activated.
     In this case it's the "Add Points Mode".
     '''
+
     def __init__(self, connectedWidget, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.connectedWidget = connectedWidget
@@ -558,10 +568,12 @@ class ActiveModePointWindow(ModeWindow):
         self.connectedWidget.setAddPointMode(False)
         self.hide()
 
+
 class Line(QtWidgets.QFrame):
     '''
     A simple line that can be added to a layout to separate widgets.
     '''
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.setMinimumWidth(300)
@@ -569,12 +581,12 @@ class Line(QtWidgets.QFrame):
         self.setFrameShadow(QtWidgets.QFrame.Sunken)
 
 
-
 class ArenaProbabilitySliderWidget(QtWidgets.QWidget):
     '''
     A Widget containing a slider and a percentage label.
     It has a logarithmic scale to give finer control for smaller probabilities.
     '''
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.value = 0.0
@@ -625,11 +637,11 @@ class ArenaProbabilitySliderWidget(QtWidgets.QWidget):
         return self.value
 
 
-
 class ArenaSliderWidget(QtWidgets.QWidget):
     '''
     A Widget containing a slider and labels to display the value and a unit.
     '''
+
     def __init__(self, minValue: int, numValues: int, stepValue: float, unit: str = "", **kwargs):
         super().__init__(**kwargs)
         assert isinstance(minValue, int)
@@ -687,11 +699,11 @@ class ArenaSliderWidget(QtWidgets.QWidget):
         return self.value
 
 
-
 class ArenaQDoubleSpinBox(QtWidgets.QDoubleSpinBox):
     '''
     A QDoubleSpinBox where a single step is 0.1 and the value will be rounded on every step up or down.
     '''
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setSingleStep(0.1)
@@ -718,7 +730,6 @@ class ArenaQDoubleSpinBox(QtWidgets.QDoubleSpinBox):
         self.setValue(new_value)
 
 
-
 class ArenaQGraphicsScene(QtWidgets.QGraphicsScene):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -727,7 +738,6 @@ class ArenaQGraphicsScene(QtWidgets.QGraphicsScene):
         for item in self.selectedItems():
             if isinstance(item, ArenaGraphicsPathItem):
                 item.remove()
-
 
 
 class ArenaQGraphicsView(QtWidgets.QGraphicsView):

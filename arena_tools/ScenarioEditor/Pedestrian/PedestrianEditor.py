@@ -1,22 +1,21 @@
 from PyQt5 import QtGui, QtCore, QtWidgets
 import os
 import copy
-from FlatlandBodyEditor import *
-from ArenaScenario import *
-from QtExtensions import *
-from HelperFunctions import *
+from arena_tools.ScenarioEditor.Flatland.FlatlandBodyEditor import *
+from arena_tools.ScenarioEditor.ArenaScenario import *
+from arena_tools.utils.QtExtensions import *
+from arena_tools.utils.HelperFunctions import *
+from .Pedestrian import PedsimAgentType, PedsimWaypointMode, PedsimStartupMode
+
 
 class PedsimAgentEditor(QtWidgets.QWidget):
     editorSaved = QtCore.pyqtSignal()
 
-    def __init__(self, pedsimAgentWidget = None, **kwargs):
+    def __init__(self, pedsimAgentWidget=None, **kwargs):
         super().__init__(**kwargs)
         self.pedsimAgentWidget = pedsimAgentWidget
-        if pedsimAgentWidget == None:
-            self.pedsimAgent = PedsimAgent()
-            if get_ros_package_path("simulator_setup") != "":
-                path = os.path.join(get_ros_package_path("simulator_setup"), "dynamic_obstacles", "person_two_legged.model.yaml")
-                self.pedsimAgent.loadFlatlandModel(path)
+        if pedsimAgentWidget is None:
+            self.pedsimAgent = Pedestrian('1')
         else:
             self.pedsimAgent = pedsimAgentWidget.pedsimAgent
         self.tempFlatlandModel = FlatlandModel()
@@ -55,23 +54,23 @@ class PedsimAgentEditor(QtWidgets.QWidget):
         vertical_idx += 1
 
         # name
-        ## label
+        # label
         self.nameLabel = QtWidgets.QLabel("Name")
         self.nameLabel.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(self.nameLabel, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ## editbox
-        name = self.pedsimAgentWidget.name_label.text() if self.pedsimAgentWidget != None else "global agent"
+        # editbox
+        name = self.pedsimAgentWidget.name_label.text() if self.pedsimAgentWidget is not None else "global agent"
         self.name_edit = QtWidgets.QLineEdit(name)
         self.name_edit.setFixedSize(200, 30)
         self.scrollAreaFrame.layout().addWidget(self.name_edit, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
 
         # model file
-        ## label
+        # label
         self.flatlandModelLabel = QtWidgets.QLabel("Flatland Model")
         self.flatlandModelLabel.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(self.flatlandModelLabel, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ## choose button
+        # choose button
         self.modelButton = QtWidgets.QPushButton("Choose...")
         self.modelButton.setFixedSize(200, 30)
         self.modelButton.clicked.connect(self.onModelButtonClicked)
@@ -79,11 +78,11 @@ class PedsimAgentEditor(QtWidgets.QWidget):
         vertical_idx += 1
 
         # type
-        ## label
+        # label
         type_label = QtWidgets.QLabel("Type")
         type_label.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(type_label, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ## dropdown
+        # dropdown
         self.typeComboBox = QtWidgets.QComboBox()
         for agent_type in PedsimAgentType:
             self.typeComboBox.insertItem(agent_type.value, agent_type.name.lower())
@@ -93,11 +92,11 @@ class PedsimAgentEditor(QtWidgets.QWidget):
         vertical_idx += 1
 
         # amount
-        ## label
+        # label
         amount_label = QtWidgets.QLabel("Amount")
         amount_label.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(amount_label, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ## spin box
+        # spin box
         self.amountSpinBox = QtWidgets.QSpinBox()
         self.amountSpinBox.setValue(1)
         self.amountSpinBox.setMinimum(1)
@@ -106,11 +105,11 @@ class PedsimAgentEditor(QtWidgets.QWidget):
         vertical_idx += 1
 
         # waypoint mode
-        ## label
+        # label
         label = QtWidgets.QLabel("Waypoint Mode")
         label.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(label, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ## dropdown
+        # dropdown
         self.waypointModeComboBox = QtWidgets.QComboBox()
         for mode in PedsimWaypointMode:
             self.waypointModeComboBox.insertItem(mode.value, mode.name.lower())
@@ -119,11 +118,11 @@ class PedsimAgentEditor(QtWidgets.QWidget):
         vertical_idx += 1
 
         # startup mode
-        ## label
+        # label
         label = QtWidgets.QLabel("Startup Mode")
         label.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(label, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ## dropdown
+        # dropdown
         self.startupModeComboBox = QtWidgets.QComboBox()
         for mode in PedsimStartupMode:
             self.startupModeComboBox.insertItem(mode.value, mode.name.lower())
@@ -133,259 +132,258 @@ class PedsimAgentEditor(QtWidgets.QWidget):
         vertical_idx += 1
 
         # wait time
-        ## label
+        # label
         self.waitTimeLabel = QtWidgets.QLabel("Wait Time (seconds)")
         self.waitTimeLabel.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(self.waitTimeLabel, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ## spin box
+        # spin box
         self.waitTimeSpinBox = ArenaQDoubleSpinBox()
         self.waitTimeSpinBox.setFixedSize(200, 30)
         self.scrollAreaFrame.layout().addWidget(self.waitTimeSpinBox, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
 
         # trigger zone radius
-        ## label
+        # label
         self.triggerZoneLabel = QtWidgets.QLabel("Trigger Zone Radius")
         self.triggerZoneLabel.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(self.triggerZoneLabel, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ## spin box
+        # spin box
         self.triggerZoneSpinBox = ArenaQDoubleSpinBox()
         self.triggerZoneSpinBox.setFixedSize(200, 30)
         self.scrollAreaFrame.layout().addWidget(self.triggerZoneSpinBox, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
 
         # vmax
-        ## label
+        # label
         self.vmax_label = QtWidgets.QLabel("Velocity<sub>max</sub>")
         self.vmax_label.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(self.vmax_label, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ## slider
+        # slider
         self.vmax_slider = ArenaSliderWidget(0, 20, 0.1, "m/s")
         self.scrollAreaFrame.layout().addWidget(self.vmax_slider, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
 
         # max talking distance
-        ### label
+        # label
         self.maxTalkingDistanceLabel = QtWidgets.QLabel("Max Talking Distance")
         self.maxTalkingDistanceLabel.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(self.maxTalkingDistanceLabel, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ### slider
+        # slider
         self.maxTalkingDistanceSlider = ArenaSliderWidget(0, 10, 1, "m")
         self.scrollAreaFrame.layout().addWidget(self.maxTalkingDistanceSlider, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
 
         # forces
-        ## heading
+        # heading
         label = QtWidgets.QLabel("#### Force Factors")
         label.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(label, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
         line = Line()
         self.scrollAreaFrame.layout().addWidget(line, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
-        ## Desired
-        ### label
+        # Desired
+        # label
         label = QtWidgets.QLabel("Desired")
         label.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(label, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ### slider
+        # slider
         self.desiredForceSlider = ArenaSliderWidget(0, 20, 1, "")
         self.desiredForceSlider.slider.setValue(1)
         self.scrollAreaFrame.layout().addWidget(self.desiredForceSlider, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
-        ## Obstacle
-        ### label
+        # Obstacle
+        # label
         label = QtWidgets.QLabel("Obstacle")
         label.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(label, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ### slider
+        # slider
         self.obstacleForceSlider = ArenaSliderWidget(0, 20, 1, "")
         self.obstacleForceSlider.slider.setValue(1)
         self.scrollAreaFrame.layout().addWidget(self.obstacleForceSlider, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
-        ## Social
-        ### label
+        # Social
+        # label
         label = QtWidgets.QLabel("Social")
         label.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(label, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ### slider
+        # slider
         self.socialForceSlider = ArenaSliderWidget(0, 20, 1, "")
         self.socialForceSlider.slider.setValue(1)
         self.scrollAreaFrame.layout().addWidget(self.socialForceSlider, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
-        ## Robot
-        ### label
+        # Robot
+        # label
         label = QtWidgets.QLabel("Robot")
         label.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(label, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ### slider
+        # slider
         self.robotForceSlider = ArenaSliderWidget(0, 20, 1, "")
         self.robotForceSlider.slider.setValue(1)
         self.scrollAreaFrame.layout().addWidget(self.robotForceSlider, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
 
-
         # individual talking
-        ## heading
+        # heading
         self.individualTalkingLabel = QtWidgets.QLabel("#### Individual Talking")
         self.individualTalkingLabel.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(self.individualTalkingLabel, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
         self.individualTalkingLine = Line()
         self.scrollAreaFrame.layout().addWidget(self.individualTalkingLine, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
-        ## probability
-        ### label
+        # probability
+        # label
         self.individualTalkingProbabilityLabel = QtWidgets.QLabel("Probability")
         self.individualTalkingProbabilityLabel.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(self.individualTalkingProbabilityLabel, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ### slider
+        # slider
         self.individualTalkingProbabilitySlider = ArenaProbabilitySliderWidget()
         self.scrollAreaFrame.layout().addWidget(self.individualTalkingProbabilitySlider, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
-        ## base time
-        ### label
+        # base time
+        # label
         self.individualTalkingBaseTimeLabel = QtWidgets.QLabel("Base Time")
         self.individualTalkingBaseTimeLabel.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(self.individualTalkingBaseTimeLabel, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ### slider
+        # slider
         self.individualTalkingBaseTimeSlider = ArenaSliderWidget(0, 100, 1, "s")
         self.scrollAreaFrame.layout().addWidget(self.individualTalkingBaseTimeSlider, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
 
         # group talk
-        ## heading
+        # heading
         self.groupTalkLabel = QtWidgets.QLabel("#### Group Talk")
         self.groupTalkLabel.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(self.groupTalkLabel, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
         self.groupTalkLine = Line()
         self.scrollAreaFrame.layout().addWidget(self.groupTalkLine, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
-        ## probability
-        ### label
+        # probability
+        # label
         self.groupTalkProbabilityLabel = QtWidgets.QLabel("Probability")
         self.groupTalkProbabilityLabel.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(self.groupTalkProbabilityLabel, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ### slider
+        # slider
         self.groupTalkProbabilitySlider = ArenaProbabilitySliderWidget()
         self.scrollAreaFrame.layout().addWidget(self.groupTalkProbabilitySlider, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
-        ## base time
-        ### label
+        # base time
+        # label
         self.groupTalkBaseTimeLabel = QtWidgets.QLabel("Base Time")
         self.groupTalkBaseTimeLabel.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(self.groupTalkBaseTimeLabel, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ### slider
+        # slider
         self.groupTalkBaseTimeSlider = ArenaSliderWidget(0, 100, 1, "s")
         self.scrollAreaFrame.layout().addWidget(self.groupTalkBaseTimeSlider, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
 
         # talk and walk
-        ## heading
+        # heading
         self.talkWalkLabel = QtWidgets.QLabel("#### Talk & Walk")
         self.talkWalkLabel.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(self.talkWalkLabel, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
         self.talkWalkLine = Line()
         self.scrollAreaFrame.layout().addWidget(self.talkWalkLine, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
-        ## probability
-        ### label
+        # probability
+        # label
         self.talkWalkProbabilityLabel = QtWidgets.QLabel("Probability")
         self.talkWalkProbabilityLabel.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(self.talkWalkProbabilityLabel, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ### slider
+        # slider
         self.talkWalkProbabilitySlider = ArenaProbabilitySliderWidget()
         self.scrollAreaFrame.layout().addWidget(self.talkWalkProbabilitySlider, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
-        ## base time
-        ### label
+        # base time
+        # label
         self.talkWalkBaseTimeLabel = QtWidgets.QLabel("Base Time")
         self.talkWalkBaseTimeLabel.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(self.talkWalkBaseTimeLabel, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ### slider
+        # slider
         self.talkWalkBaseTimeSlider = ArenaSliderWidget(0, 100, 1, "s")
         self.scrollAreaFrame.layout().addWidget(self.talkWalkBaseTimeSlider, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
 
         # requesting service
-        ## heading
+        # heading
         self.requestingServiceLabel = QtWidgets.QLabel("#### Requesting Service")
         self.requestingServiceLabel.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(self.requestingServiceLabel, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
         self.requestingServiceLine = Line()
         self.scrollAreaFrame.layout().addWidget(self.requestingServiceLine, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
-        ## probability
-        ### label
+        # probability
+        # label
         self.requestingServiceProbabilityLabel = QtWidgets.QLabel("Probability")
         self.requestingServiceProbabilityLabel.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(self.requestingServiceProbabilityLabel, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ### slider
+        # slider
         self.requestingServiceProbabilitySlider = ArenaProbabilitySliderWidget()
         self.scrollAreaFrame.layout().addWidget(self.requestingServiceProbabilitySlider, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
-        ## max service distance
-        ### label
+        # max service distance
+        # label
         self.maxServiceDistanceLabel = QtWidgets.QLabel("Max Service Distance")
         self.maxServiceDistanceLabel.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(self.maxServiceDistanceLabel, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ### slider
+        # slider
         self.maxServiceDistanceSlider = ArenaSliderWidget(0, 10, 1, "m")
         self.scrollAreaFrame.layout().addWidget(self.maxServiceDistanceSlider, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
-        ## base time requesting
-        ### label
+        # base time requesting
+        # label
         self.requestingServiceRequestingBaseTimeLabel = QtWidgets.QLabel("Base Time (req.)")
         self.requestingServiceRequestingBaseTimeLabel.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(self.requestingServiceRequestingBaseTimeLabel, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ### slider
+        # slider
         self.requestingServiceRequestingBaseTimeSlider = ArenaSliderWidget(0, 100, 1, "s")
         self.scrollAreaFrame.layout().addWidget(self.requestingServiceRequestingBaseTimeSlider, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
-        ## base time receiving
-        ### label
+        # base time receiving
+        # label
         self.requestingServiceReceivingBaseTimeLabel = QtWidgets.QLabel("Base Time (recv.)")
         self.requestingServiceReceivingBaseTimeLabel.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(self.requestingServiceReceivingBaseTimeLabel, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ### slider
+        # slider
         self.requestingServiceReceivingBaseTimeSlider = ArenaSliderWidget(0, 100, 1, "s")
         self.scrollAreaFrame.layout().addWidget(self.requestingServiceReceivingBaseTimeSlider, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
 
         # requesting guide
-        ## heading
+        # heading
         self.requestingGuideLabel = QtWidgets.QLabel("#### Requesting Guide")
         self.requestingGuideLabel.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(self.requestingGuideLabel, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
         self.requestingGuideLine = Line()
         self.scrollAreaFrame.layout().addWidget(self.requestingGuideLine, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
-        ## probability
-        ### label
+        # probability
+        # label
         self.requestingGuideProbabilityLabel = QtWidgets.QLabel("Probability")
         self.requestingGuideProbabilityLabel.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(self.requestingGuideProbabilityLabel, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ### slider
+        # slider
         self.requestingGuideProbabilitySlider = ArenaProbabilitySliderWidget()
         self.scrollAreaFrame.layout().addWidget(self.requestingGuideProbabilitySlider, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
-        
+
         # requesting follower
-        ## heading
+        # heading
         self.requestingFollowerLabel = QtWidgets.QLabel("#### Requesting Follower")
         self.requestingFollowerLabel.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(self.requestingFollowerLabel, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
         self.requestingFollowerLine = Line()
         self.scrollAreaFrame.layout().addWidget(self.requestingFollowerLine, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
-        ## probability
-        ### label
+        # probability
+        # label
         self.requestingFollowerProbabilityLabel = QtWidgets.QLabel("Probability")
         self.requestingFollowerProbabilityLabel.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(self.requestingFollowerProbabilityLabel, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ### slider
+        # slider
         self.requestingFollowerProbabilitySlider = ArenaProbabilitySliderWidget()
         self.scrollAreaFrame.layout().addWidget(self.requestingFollowerProbabilitySlider, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
-        
+
         # save button
         self.save_button = QtWidgets.QPushButton("Save and Close")
         self.save_button.clicked.connect(self.onSaveClicked)
@@ -605,7 +603,7 @@ class PedsimAgentEditor(QtWidgets.QWidget):
             self.tempFlatlandModel.load(path)
             self.modelButton.setText(path.split("/")[-1])
 
-    def updatePedsimAgentFromWidgets(self, agent: PedsimAgent):
+    def updatePedsimAgentFromWidgets(self, agent: Pedestrian):
         agent.type = PedsimAgentType(self.typeComboBox.currentIndex()).name.lower()
         agent.number_of_peds = self.amountSpinBox.value()
         agent.vmax = self.vmax_slider.getValue()
@@ -673,6 +671,7 @@ class PedsimAgentEditorGlobalConfig(PedsimAgentEditor):
     A Pedsim Agent Editor excluding widgets that shouldn't be globally configured
     and without a parent PedsimAgentWidget.
     """
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 

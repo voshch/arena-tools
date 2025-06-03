@@ -1,9 +1,9 @@
 from PyQt5 import QtGui, QtCore, QtWidgets
 import json
 import pathlib
-from HelperFunctions import *
-from QtExtensions import *
-from ArenaScenarioEditor import RosMapData
+from arena_tools.utils.HelperFunctions import *
+from arena_tools.utils.QtExtensions import *
+from arena_tools.ScenarioEditor.ArenaScenarioEditor import RosMapData
 
 
 class RobotPath:
@@ -81,14 +81,14 @@ class PathCreator(QtWidgets.QMainWindow):
             0.5,
             handlePositionChangeMethod=lambda _: self.drawWaypointPath(),
         )
-        ## start pos
+        # start pos
         self.robot_ellipse_item.setPosNoEvent(0, 0)
-        ## set color
+        # set color
         brush = QtGui.QBrush(QtGui.QColor("green"), QtCore.Qt.BrushStyle.SolidPattern)
         self.robot_ellipse_item.setBrush(brush)
-        ## enable text next to item in scene
+        # enable text next to item in scene
         self.robot_ellipse_item.enableTextItem(self.scene, "Robot")
-        ## add to scene
+        # add to scene
         self.scene.addItem(self.robot_ellipse_item)
 
         # setup waypoints
@@ -98,10 +98,10 @@ class PathCreator(QtWidgets.QMainWindow):
         self.view.clickedPos.connect(self.handleGraphicsViewClick)
         # GraphicsItem for drawing a path connecting the waypoints
         self.waypointPathItem = QtWidgets.QGraphicsPathItem()
-        ## create brush
+        # create brush
         brush = QtGui.QBrush(QtGui.QColor(), QtCore.Qt.BrushStyle.NoBrush)
         self.waypointPathItem.setBrush(brush)
-        ## create pen
+        # create pen
         pen = QtGui.QPen()
         pen.setColor(QtGui.QColor("lightseagreen"))
         pen.setWidthF(0.1)
@@ -109,7 +109,7 @@ class PathCreator(QtWidgets.QMainWindow):
         pen.setCapStyle(QtCore.Qt.PenCapStyle.RoundCap)
         pen.setJoinStyle(QtCore.Qt.PenJoinStyle.RoundJoin)
         self.waypointPathItem.setPen(pen)
-        ## add to scene
+        # add to scene
         self.scene.addItem(self.waypointPathItem)
 
     def setup_ui(self):
@@ -140,32 +140,32 @@ class PathCreator(QtWidgets.QMainWindow):
         self.splitter.addWidget(frame)
 
         # select map
-        ## label
+        # label
         map_label = QtWidgets.QLabel("### Map:")
         map_label.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         frame.layout().addWidget(map_label, layout_index, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        ## map name label
+        # map name label
         self.map_name_label = QtWidgets.QLabel("No map selected")
         self.map_name_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         frame.layout().addWidget(self.map_name_label, layout_index, 1, 1, 1)
-        ## browse button
+        # browse button
         browse_button = QtWidgets.QPushButton("Browse...")
         browse_button.clicked.connect(self.onBrowseMapsClicked)
         frame.layout().addWidget(browse_button, layout_index, 3, QtCore.Qt.AlignmentFlag.AlignRight)
         layout_index += 1
 
-        ## line
+        # line
         frame.layout().addWidget(Line(), layout_index, 0, 1, -1)
         layout_index += 1
 
         # No. images
-        ## label
+        # label
         num_images_label = QtWidgets.QLabel("### No. Images")
         num_images_label.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         frame.layout().addWidget(
             num_images_label, layout_index, 0, QtCore.Qt.AlignmentFlag.AlignLeft
         )
-        ## spinbox
+        # spinbox
         self.num_images_spin_box = QtWidgets.QSpinBox()
         self.num_images_spin_box.setRange(1, 10000)
         self.num_images_spin_box.setValue(101)
@@ -175,7 +175,7 @@ class PathCreator(QtWidgets.QMainWindow):
             self.num_images_spin_box, layout_index, 3, QtCore.Qt.AlignmentFlag.AlignRight
         )
         layout_index += 1
-        ## line
+        # line
         frame.layout().addWidget(Line(), layout_index, 0, 1, -1)
         layout_index += 1
 
@@ -378,7 +378,7 @@ class PathCreator(QtWidgets.QMainWindow):
         pixmap = pixmap.transformed(transform)
 
         # remove old map
-        if self.pixmap_item != None:
+        if self.pixmap_item is not None:
             self.scene.removeItem(self.pixmap_item)
 
         self.pixmap_item = QtWidgets.QGraphicsPixmapItem(pixmap)

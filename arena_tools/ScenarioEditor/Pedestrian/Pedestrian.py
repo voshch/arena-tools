@@ -2,9 +2,8 @@ import numpy as np
 import rospkg
 import os
 from enum import Enum
-from FlatlandModel import FlatlandModel
-from HelperFunctions import *
-from constants import Constants
+from arena_tools.ScenarioEditor.Flatland.FlatlandModel import FlatlandModel
+from arena_tools.utils.HelperFunctions import *
 
 
 class PedsimStartupMode(Enum):
@@ -36,8 +35,8 @@ class PedsimInteractiveObstacle:
         #   TODO...
 
 
-class PedsimAgent:
-    def __init__(self, name="", flatlandModelPath="") -> None:
+class Pedestrian:
+    def __init__(self, name) -> None:
         self.name = name
 
         # set default values (derived from pedsim_msgs/Ped.msg)
@@ -45,9 +44,6 @@ class PedsimAgent:
         self.pos = np.zeros(2)
         self.type = "adult"
         self.yaml_file = ""
-        self.flatlandModel = None  # flatlandModel instance
-        if flatlandModelPath != "":
-            self.loadFlatlandModel(flatlandModelPath)
         self.number_of_peds = 1
         self.vmax = 0.3
 
@@ -88,7 +84,7 @@ class PedsimAgent:
         self.flatlandModel = model
 
     def __eq__(self, other):
-        if not isinstance(other, PedsimAgent):
+        if not isinstance(other, Pedestrian):
             return NotImplemented
 
         if self.name != other.name:
@@ -225,17 +221,13 @@ class PedsimAgent:
 
     @staticmethod
     def fromDict(d: dict):
-        a = PedsimAgent(d["name"], d["yaml_file"])
+        a = Pedestrian(d["name"])
 
         a.name = d["name"]
 
         a.id = d["id"]
         a.pos = np.array([d["pos"][0], d["pos"][1]])
         a.type = d["type"]
-        a.yaml_file = os.path.join(
-            rospkg.RosPack().get_path(Constants.SIMULATION_SETUP_PACKAGE),
-            d["yaml_file"],
-        )
         a.number_of_peds = d["number_of_peds"]
         a.vmax = d["vmax"]
 
@@ -275,7 +267,7 @@ class PedsimAgent:
         try:
             from pedsim_msgs.msg import Ped
             from geometry_msgs.msg import Point
-        except:
+        except BaseException:
             return None
 
         msg = Ped()

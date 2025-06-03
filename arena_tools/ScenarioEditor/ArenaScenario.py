@@ -2,9 +2,9 @@ import numpy as np
 import os
 import yaml
 import json
-from PedsimAgent import *
-from FlatlandModel import *
-from HelperFunctions import *
+from .Pedestrian.Pedestrian import Pedestrian
+from .Flatland.FlatlandModel import *
+from ..utils.HelperFunctions import *
 
 
 class ArenaScenario:
@@ -39,7 +39,7 @@ class ArenaScenario:
         return scenario
 
     def loadFromDict(self, d: dict):
-        self.pedsimAgents = [PedsimAgent.fromDict(
+        self.pedsimAgents = [Pedestrian.fromDict(
             a) for a in d["pedsim_agents"]]
         self.staticObstacles = [FlatlandObject.fromDict(
             o) for o in d["static_obstacles"]]

@@ -1,10 +1,10 @@
-import rospkg
-from HelperFunctions import *
+from ...utils.HelperFunctions import *
 from PyQt5 import QtGui, QtCore, QtWidgets
 from enum import Enum
 import yaml
 import os
 import numpy as np
+
 
 class B2BodyType(Enum):
     DYNAMIC = 0
@@ -54,6 +54,7 @@ class FlatlandFootprint():
         d["density"] = self.density
         return d
 
+
 class CircleFlatlandFootprint(FlatlandFootprint):
     def __init__(self):
         super().__init__()
@@ -84,6 +85,7 @@ class CircleFlatlandFootprint(FlatlandFootprint):
         d["type"] = "circle"
         return d
 
+
 class PolygonFlatlandFootprint(FlatlandFootprint):
     def __init__(self):
         super().__init__()
@@ -112,6 +114,7 @@ class PolygonFlatlandFootprint(FlatlandFootprint):
         d["type"] = "polygon"
         return d
 
+
 class FlatlandBody():
     def __init__(self):
         self.name = "new_body"
@@ -132,7 +135,7 @@ class FlatlandBody():
                 and np.allclose(self.linear_damping, other.linear_damping)
                 and np.allclose(self.angular_damping, other.angular_damping)
                 and self.footprints == other.footprints)
-        
+
     @staticmethod
     def fromDict(d: dict):
         body = FlatlandBody()
@@ -165,6 +168,7 @@ class FlatlandBody():
         d["footprints"] = [footprint.toDict() for footprint in self.footprints]
         return d
 
+
 class FlatlandModel():
     def __init__(self):
         super().__init__()
@@ -189,9 +193,9 @@ class FlatlandModel():
         d["bodies"] = [body.toDict() for body in self.bodies.values()]
         return d
 
-    def save(self, path_in = ""):
+    def save(self, path_in=""):
         if path_in == "" and self.path == "":
-                return False
+            return False
         elif path_in != "":
             self.path = path_in
 
@@ -213,6 +217,7 @@ class FlatlandModel():
                     self.bodies_index += 1
             self.path = path
 
+
 class FlatlandObject():
     def __init__(self, name: str = "", model_path: str = ""):
         self.name = name
@@ -223,7 +228,7 @@ class FlatlandObject():
         self.angle = 0.0
 
     @staticmethod
-    def fromDict(d : dict):
+    def fromDict(d: dict):
         o = FlatlandObject()
         o.loadFromDict(d)
         return o

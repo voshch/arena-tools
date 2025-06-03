@@ -4,10 +4,10 @@ import os
 import time
 import yaml
 from typing import Tuple, List, Set
-from QtExtensions import *
-from HelperFunctions import *
-from ZonePropertyEditor import *
-from ArenaScenarioEditor import RosMapData
+from arena_tools.utils.QtExtensions import *
+from arena_tools.utils.HelperFunctions import *
+from arena_tools.ZonesEditor.ZonePropertyEditor import *
+from arena_tools.ScenarioEditor.ArenaScenarioEditor import RosMapData
 
 
 class PointWidget(QtWidgets.QWidget):
@@ -15,18 +15,18 @@ class PointWidget(QtWidgets.QWidget):
         super().__init__(**kwargs)
         self.id = 0
         self.polygonWidget = polygonWidget  # needed so the ellipse item can trigger a polygon redraw
-        
+
         # create circle and add to scene
         self.ellipseItem = PointGraphicsEllipseItem(self, None, None, -0.25, -0.25, 0.5, 0.5)
         self.graphicsScene = graphicsScene
         graphicsScene.addItem(self.ellipseItem)
-        
+
         # setup widgets
         self.setupUI()
         self.setId(self.id)
-        
+
         # set initial position
-        if posIn != None:
+        if posIn is not None:
             self.setPos(posIn)
 
     def setupUI(self):
@@ -34,19 +34,19 @@ class PointWidget(QtWidgets.QWidget):
         self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Maximum, QtWidgets.QSizePolicy.Policy.Maximum)
 
         # x value
-        ## label
+        # label
         label = QtWidgets.QLabel("x")
         self.layout().addWidget(label)
-        ## spinbox
+        # spinbox
         self.posXSpinBox = ArenaQDoubleSpinBox()
         self.posXSpinBox.valueChanged.connect(self.updateEllipseItemFromSpinBoxes)
         self.layout().addWidget(self.posXSpinBox)
 
         # y value
-        ## label
+        # label
         label = QtWidgets.QLabel("y")
         self.layout().addWidget(label)
-        ## spinbox
+        # spinbox
         self.posYSpinBox = ArenaQDoubleSpinBox()
         self.posYSpinBox.valueChanged.connect(self.updateEllipseItemFromSpinBoxes)
         self.layout().addWidget(self.posYSpinBox)
@@ -88,8 +88,9 @@ class PointWidget(QtWidgets.QWidget):
         self.polygonWidget.update()
         self.deleteLater()
 
+
 class PolygonWidget(QtWidgets.QFrame):
-    def __init__(self, graphicsScene: QtWidgets.QGraphicsScene, graphicsView: ArenaQGraphicsView, label: str, polygon: shapely.Polygon = None, color: QtGui.QColor = QtGui.QColor(0, 0, 0) , **kwargs):
+    def __init__(self, graphicsScene: QtWidgets.QGraphicsScene, graphicsView: ArenaQGraphicsView, label: str, polygon: shapely.Polygon = None, color: QtGui.QColor = QtGui.QColor(0, 0, 0), **kwargs):
         super().__init__(**kwargs)
         self.graphicsScene = graphicsScene
         self.graphicsView = graphicsView
@@ -99,13 +100,13 @@ class PolygonWidget(QtWidgets.QFrame):
 
         graphicsView.clickedPos.connect(self.handleGraphicsViewClick)
 
-        #Label
+        # Label
         self.textItem = QtWidgets.QGraphicsTextItem(label)
         self.textItem.setScale(0.03)
         self.textItem.setZValue(3)
-        self.textItem.setDefaultTextColor(QtGui.QColor(255,0,0))
+        self.textItem.setDefaultTextColor(QtGui.QColor(255, 0, 0))
         self.textItem.setVisible(False)
-        labelpen = QtGui.QPen(QtGui.QColor(0,0,255))
+        labelpen = QtGui.QPen(QtGui.QColor(0, 0, 255))
         labelpen.setWidthF(0.05)
         labelpen.setStyle(QtCore.Qt.PenStyle.SolidLine)
         labelpen.setCapStyle(QtCore.Qt.PenCapStyle.RoundCap)
@@ -115,7 +116,7 @@ class PolygonWidget(QtWidgets.QFrame):
         self.textRectItem.setPen(labelpen)
         self.textRectItem.setBrush(labelbrush)
         self.textRectItem.setZValue(2)
-        
+
         # Polygon for drawing a path connecting the points
         self.polygonDrawItem = QtWidgets.QGraphicsPolygonItem()
 
@@ -129,61 +130,61 @@ class PolygonWidget(QtWidgets.QFrame):
         pen.setJoinStyle(QtCore.Qt.PenJoinStyle.RoundJoin)
         self.polygonDrawItem.setPen(pen)
 
-        ## add to scene
+        # add to scene
         graphicsScene.addItem(self.polygonDrawItem)
         graphicsScene.addItem(self.textItem)
         graphicsScene.addItem(self.textRectItem)
 
-        if polygon != None:
-            for x,y in polygon.exterior.coords[:-1]:
+        if polygon is not None:
+            for x, y in polygon.exterior.coords[:-1]:
                 self.addPointWidget(QtCore.QPointF(x, y))
         else:
             # setup waypoints
             self.activeModeWindow = ActiveModePointWindow(self)
             self.setAddPointMode(True)
-    
+
     def setupUI(self):
 
         self.setLayout(QtWidgets.QVBoxLayout())
         self.layout().setSpacing(0)
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.setFrameStyle(QtWidgets.QFrame.Shape.Box | QtWidgets.QFrame.Shadow.Raised)
-    
+
     def getPolygon(self) -> shapely.Polygon:
         return shapely.Polygon(self.getPoints())
-    
+
     def getQPoints(self) -> List[QtCore.QPointF]:
         return [widget.ellipseItem.mapToScene(widget.ellipseItem.transformOriginPoint()) for widget in self.getPointWidgets()]
-    
+
     def getPoints(self) -> List[Tuple[float, float]]:
         return [(qpoint.x(), qpoint.y()) for qpoint in self.getQPoints()]
-    
-    def setLabel(self, text:str):
+
+    def setLabel(self, text: str):
         self.textItem.setPlainText(text)
         self.drawPolygon()
-    
+
     def setBrush(self, color: QtGui.QColor):
         color.setAlpha(64)
         brush = QtGui.QBrush(color)
         self.polygonDrawItem.setBrush(brush)
-    
+
     def drawPolygon(self):
         polygon = QtGui.QPolygonF()
 
         for point in self.getQPoints():
             polygon.append(point)
-        
+
         tl = polygon.boundingRect().topLeft()
 
         self.polygonDrawItem.setPolygon(polygon)
 
-        topLeft = sorted( self.getQPoints(), key = lambda p: QtCore.QPointF.dotProduct(tl-p, tl-p))
-        if(topLeft != []):
+        topLeft = sorted(self.getQPoints(), key=lambda p: QtCore.QPointF.dotProduct(tl - p, tl - p))
+        if (topLeft != []):
             self.textItem.setPos(topLeft[0])
-            self.textItem.setY(self.textItem.y()-0.5)
-            self.textItem.setX(self.textItem.x()+0.3)
+            self.textItem.setY(self.textItem.y() - 0.5)
+            self.textItem.setX(self.textItem.x() + 0.3)
             self.textRectItem.setRect(self.textItem.sceneBoundingRect())
-    
+
     def handleGraphicsViewClick(self, pos: QtCore.QPointF):
         if self.addWaypointModeActive:
             self.addPointWidget(pos)
@@ -204,12 +205,12 @@ class PolygonWidget(QtWidgets.QFrame):
         else:
             self.activeModeWindow.hide()
             self.update()
-    
+
     def getPointWidgets(self) -> List[PointWidget]:
         widgets = []
         for i in range(self.layout().count()):
             w = self.layout().itemAt(i).widget()
-            if w != None:
+            if w is not None:
                 widgets.append(w)
         return widgets
 
@@ -225,7 +226,7 @@ class PolygonWidget(QtWidgets.QFrame):
         for i, w in enumerate(widgets):
             w.setId(i)
         self.drawPolygon()
-    
+
     def remove(self):
         # remove waypoints
         for w in self.getPointWidgets():
@@ -245,6 +246,7 @@ class ZoneWidget(QtWidgets.QFrame):
     '''
     This is a row in the obstacles frame.
     '''
+
     def __init__(self, zone: Zone, graphicsScene: QtWidgets.QGraphicsScene, graphicsView: ArenaQGraphicsView, catEditor: CategoriesEditor, **kwargs):
         super().__init__(**kwargs)
         self.zone = zone
@@ -259,7 +261,7 @@ class ZoneWidget(QtWidgets.QFrame):
         self.zoneEditor.editorSaved.connect(self.handleEditorSaved)
 
         self.color = None
-        
+
         # setup widgets
         self.setupUI()
 
@@ -293,21 +295,21 @@ class ZoneWidget(QtWidgets.QFrame):
         self.layout().addWidget(button, 2, 1, 1, 2)
         self.polygonListWidget = QtWidgets.QWidget()
         self.polygonListWidget.setLayout(QtWidgets.QVBoxLayout())
-        self.polygonListWidget.layout().setContentsMargins(0,0,0,0)
+        self.polygonListWidget.layout().setContentsMargins(0, 0, 0, 0)
         self.layout().addWidget(self.polygonListWidget, 3, 0, -1, 3)
 
     def getPolygonWidgets(self) -> List[PolygonWidget]:
         widgets = []
         for i in range(self.polygonListWidget.layout().count()):
             w = self.polygonListWidget.layout().itemAt(i).widget()
-            if w != None:
+            if w is not None:
                 widgets.append(w)
         return widgets
-    
+
     def handleEditorSaved(self):
         # editor was saved, update possibly changed values
         self.update()
-    
+
     def handleMouseDoubleClick(self):
         # function will be called by the graphics item
         self.onEditClicked()
@@ -317,7 +319,7 @@ class ZoneWidget(QtWidgets.QFrame):
 
         catColor = self.catEditor.getCategories()
         if self.zone.category != []:
-                self.color = catColor[self.zone.category[0]]
+            self.color = catColor[self.zone.category[0]]
 
         for w in self.getPolygonWidgets():
             if self.zone.category != []:
@@ -325,7 +327,7 @@ class ZoneWidget(QtWidgets.QFrame):
             w.setLabel(self.zone.label)
 
         self.zone.polygon = shapely.MultiPolygon([w.getPolygon() for w in self.getPolygonWidgets()])
-    
+
     def addPolygonWidget(self, polygon: shapely.Polygon = None):
         if self.color:
             w = PolygonWidget(self.graphicsScene, self.graphicsView, self.zone.label, polygon, self.color, parent=self)
@@ -342,13 +344,13 @@ class ZoneWidget(QtWidgets.QFrame):
 
     def onDeleteClicked(self):
         self.remove()
-    
+
     def onAddPolygonClicked(self):
         self.addPolygonWidget()
 
     def onEditClicked(self):
         self.zoneEditor.show()
-    
+
     def disableWaypointMode(self):
         for w in self.getPolygonWidgets():
             w.setAddPointMode(False)
@@ -357,7 +359,7 @@ class ZoneWidget(QtWidgets.QFrame):
 class ZonesEditor(QtWidgets.QMainWindow):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        
+
         self.numZones = 0
         self.pixmapItem = None
         self.mapData = None
@@ -367,7 +369,7 @@ class ZonesEditor(QtWidgets.QMainWindow):
 
         self.setupUI()
 
-    def setupUI(self) :
+    def setupUI(self):
         self.updateWindowTitle()
         self.resize(1300, 700)
         self.move(100, 100)
@@ -399,41 +401,41 @@ class ZonesEditor(QtWidgets.QMainWindow):
         # status bar
         self.statusBar()  # create status bar
 
-        #categories
+        # categories
         self.catEditor = CategoriesEditor(self.zoneData, parent=self, flags=QtCore.Qt.WindowType.Window)
         self.catEditor.editorSaved.connect(self.updateCategories)
 
         # drawing frame
-        ## frame
+        # frame
         drawingFrame = QtWidgets.QFrame()
         drawingFrame.setLayout(QtWidgets.QVBoxLayout())
         drawingFrame.setFrameStyle(QtWidgets.QFrame.Shape.Box | QtWidgets.QFrame.Shadow.Raised)
         self.centralWidget().layout().addWidget(drawingFrame, 0, 1, -1, -1)
-        ## graphicsscene
+        # graphicsscene
         self.gscene = ArenaQGraphicsScene()
-        ## graphicsview
+        # graphicsview
         self.gview = ArenaQGraphicsView(self.gscene)
         self.gview.scale(0.25, 0.25)  # zoom out a bit
         drawingFrame.layout().addWidget(self.gview)
 
         # zones
-        ## scrollarea
+        # scrollarea
         self.scrollarea = QtWidgets.QScrollArea(self)
         self.scrollarea.setWidgetResizable(True)
         self.scrollarea.setMinimumWidth(310)
         self.centralWidget().layout().addWidget(self.scrollarea, 0, 0, 1, 1)
-        ## frame
+        # frame
         self.widgetFrame = QtWidgets.QFrame()
         self.widgetFrame.setLayout(QtWidgets.QVBoxLayout())
         self.widgetFrame.setSizePolicy(QtWidgets.QSizePolicy.Policy.Maximum, QtWidgets.QSizePolicy.Policy.Maximum)
         self.scrollarea.setWidget(self.widgetFrame)
-        ## button
+        # button
         self.addZoneButton = QtWidgets.QPushButton("Add new Zone")
         self.addZoneButton.pressed.connect(self.onAddZoneClicked)
         self.centralWidget().layout().addWidget(self.addZoneButton, 1, 0, -1, 1)
 
         self.updateCategories()
-    
+
     def onEditCategoriesClicked(self):
         self.catEditor.show()
 
@@ -444,7 +446,7 @@ class ZonesEditor(QtWidgets.QMainWindow):
         '''
         Adds a new ZoneWidget with the given Zone
         '''
-        w = ZoneWidget(zone if zone != None else Zone("Zone {0}".format(self.numZones)), self.gscene, self.gview, self.catEditor, parent=self)
+        w = ZoneWidget(zone if zone is not None else Zone("Zone {0}".format(self.numZones)), self.gscene, self.gview, self.catEditor, parent=self)
         self.widgetFrame.layout().addWidget(w)
         self.numZones += 1
         self.updateCategories()
@@ -455,7 +457,7 @@ class ZonesEditor(QtWidgets.QMainWindow):
             w = self.widgetFrame.layout().itemAt(i).widget()
             widgets.append(w)
         return widgets
-    
+
     def updateCategories(self):
         for w in self.getZoneWidgets():
             w.zoneEditor.category = list(self.catEditor.getCategories().keys())
@@ -465,12 +467,12 @@ class ZonesEditor(QtWidgets.QMainWindow):
             self.disableAddWaypointMode()
 
         return super().keyPressEvent(event)
-    
-    def disableAddWaypointMode(self) :
+
+    def disableAddWaypointMode(self):
         widgets = self.getZoneWidgets()
         for w in widgets:
             w.disableWaypointMode()
-    
+
     #####
 
     def onNewScenarioClicked(self):
@@ -480,69 +482,69 @@ class ZonesEditor(QtWidgets.QMainWindow):
         self.loadZones("")
         self.updateWindowTitle()
 
-    def onOpenClicked(self) :
+    def onOpenClicked(self):
         path = QtWidgets.QFileDialog.getExistingDirectory(parent=self, options=QtWidgets.QFileDialog.ShowDirsOnly)
         if path != "":
-            if os.path.exists(path+"/map/map.yaml"):
-                self.setMap(path+"/map/map.yaml")
+            if os.path.exists(path + "/map/map.yaml"):
+                self.setMap(path + "/map/map.yaml")
                 self.currentDirectory = path
-                if os.path.exists(path+"/map/zones.yaml"):
-                    self.loadZones(path+"/map/zones.yaml")
+                if os.path.exists(path + "/map/zones.yaml"):
+                    self.loadZones(path + "/map/zones.yaml")
                 msg = f"[Opened world in {path}]"
                 self.statusBar().showMessage(msg, 10 * 1000)
                 self.updateWindowTitle()
             else:
                 msg = f"[Could not open world in {path}]"
                 self.statusBar().showMessage(msg, 10 * 1000)
-    
+
     def onExportClicked(self):
         image = QtGui.QImage(self.gview.viewport().rect().size(), QtGui.QImage.Format_ARGB32_Premultiplied)
         painter = QtGui.QPainter(image)
-        self.gview.render(painter, QtCore.QRectF(self.gview.viewport().rect()), QtCore.QRect(0,0,0,0))
+        self.gview.render(painter, QtCore.QRectF(self.gview.viewport().rect()), QtCore.QRect(0, 0, 0, 0))
         painter.end()
-        res = QtWidgets.QFileDialog.getSaveFileName(parent=self, directory=self.currentDirectory + ("/photos" if self.currentDirectory else ""), filter = "Image (*.png)")
+        res = QtWidgets.QFileDialog.getSaveFileName(parent=self, directory=self.currentDirectory + ("/photos" if self.currentDirectory else ""), filter="Image (*.png)")
         path = res[0]
         if path != "":
             image.save(path)
             msg = f"[Saved image in {path}"
             self.statusBar().showMessage(msg, 10 * 1000)
-    
+
     def onLoadMapClicked(self):
-        res = QtWidgets.QFileDialog.getOpenFileName(parent=self, filter = "YAML File (*.yaml)")
+        res = QtWidgets.QFileDialog.getOpenFileName(parent=self, filter="YAML File (*.yaml)")
         path = res[0]
         if path != "":
             self.setMap(path)
             self.currentDirectory = ""
             self.updateWindowTitle()
-    
+
     def onLoadZonesClicked(self):
-        res = QtWidgets.QFileDialog.getOpenFileName(parent=self, filter = "YAML File (*.yaml)")
+        res = QtWidgets.QFileDialog.getOpenFileName(parent=self, filter="YAML File (*.yaml)")
         path = res[0]
         if path != "":
             self.loadZones(path)
             self.updateWindowTitle()
-            
+
     def onSaveClicked(self) -> bool:
         if self.currentDirectory:
             if self.currentSaveFile:
-                return self.save(self.currentDirectory+"/"+self.currentSaveFile)
+                return self.save(self.currentDirectory + "/" + self.currentSaveFile)
         self.onSaveAsClicked()
-        
+
     def onSaveAsClicked(self) -> bool:
-        res = QtWidgets.QFileDialog.getSaveFileName(parent=self, directory=self.currentDirectory+"/"+self.currentSaveFile, filter = "YAML File (*.yaml)")
+        res = QtWidgets.QFileDialog.getSaveFileName(parent=self, directory=self.currentDirectory + "/" + self.currentSaveFile, filter="YAML File (*.yaml)")
         path = res[0]
         if path != "":
             return self.save(path)
         return False
-    
+
     #####
-    
+
     def setMap(self, path: str):
         self.mapData = RosMapData(path)
         pixmap = QtGui.QPixmap(self.mapData.image_path)
         transform = QtGui.QTransform.fromScale(1.0, -1.0)  # flip y axis
         pixmap = pixmap.transformed(transform)
-        if self.pixmapItem != None:
+        if self.pixmapItem is not None:
             self.gscene.removeItem(self.pixmapItem)        # remove old map
         self.pixmapItem = QtWidgets.QGraphicsPixmapItem(pixmap)
         self.pixmapItem.setZValue(-1.0)  # make sure map is always in the background
@@ -550,17 +552,17 @@ class ZonesEditor(QtWidgets.QMainWindow):
         self.pixmapItem.setOffset(self.mapData.origin[0] / self.mapData.resolution, self.mapData.origin[1] / self.mapData.resolution)
         self.gscene.addItem(self.pixmapItem)
 
-    def loadZones(self, path: str) :
+    def loadZones(self, path: str):
         self.zoneData = ZonesData(path)
         if path != "":
-            self.currentSaveFile = path.rsplit("/",1)[1]
+            self.currentSaveFile = path.rsplit("/", 1)[1]
 
         for widget in self.getZoneWidgets():
             widget.remove()
 
         for zone in self.zoneData.zones:
             self.addZoneWidget(zone)
-        
+
         self.catEditor.updateValuesFromZone(self.zoneData)
         self.updateCategories()
 
@@ -574,7 +576,7 @@ class ZonesEditor(QtWidgets.QMainWindow):
 
         return False
 
-    def updateZoneFromWidgets(self) :
+    def updateZoneFromWidgets(self):
         '''
         Save data from widgets into self.zoneData
         '''
@@ -584,13 +586,6 @@ class ZonesEditor(QtWidgets.QMainWindow):
             self.zoneData.zones.append(w.zone)
 
     def updateWindowTitle(self):
-        self.setWindowTitle(((self.currentDirectory.rsplit("/",1)[1] + " - ") if self.currentDirectory else "") + (self.currentSaveFile + " - " if self.currentSaveFile else "") + "Zones Editor")
-        
+        self.setWindowTitle(((self.currentDirectory.rsplit("/", 1)[1] + " - ") if self.currentDirectory else "") + (self.currentSaveFile + " - " if self.currentSaveFile else "") + "Zones Editor")
 
-if __name__ == "__main__":
-    app = QtWidgets.QApplication([])
 
-    widget = ZonesEditor()
-    widget.show()
-
-    app.exec()
