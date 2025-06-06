@@ -1,11 +1,12 @@
 from PyQt5 import QtGui, QtCore, QtWidgets
 import os
 import copy
-from arena_tools.ScenarioEditor.Flatland.FlatlandBodyEditor import *
 from arena_tools.ScenarioEditor.ArenaScenario import *
 from arena_tools.utils.QtExtensions import *
 from arena_tools.utils.HelperFunctions import *
 from .Pedestrian import PedsimAgentType, PedsimWaypointMode, PedsimStartupMode
+
+import arena_simulation_setup.entities.obstacles.dynamic
 
 
 class PedsimAgentEditor(QtWidgets.QWidget):
@@ -18,7 +19,6 @@ class PedsimAgentEditor(QtWidgets.QWidget):
             self.pedsimAgent = Pedestrian('1')
         else:
             self.pedsimAgent = pedsimAgentWidget.pedsimAgent
-        self.tempFlatlandModel = FlatlandModel()
         self.setup_ui()
         self.updateValuesFromPedsimAgent()
         self.updateWidgetsFromSelectedType()
@@ -63,18 +63,6 @@ class PedsimAgentEditor(QtWidgets.QWidget):
         self.name_edit = QtWidgets.QLineEdit(name)
         self.name_edit.setFixedSize(200, 30)
         self.scrollAreaFrame.layout().addWidget(self.name_edit, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
-        vertical_idx += 1
-
-        # model file
-        # label
-        self.flatlandModelLabel = QtWidgets.QLabel("Flatland Model")
-        self.flatlandModelLabel.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
-        self.scrollAreaFrame.layout().addWidget(self.flatlandModelLabel, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        # choose button
-        self.modelButton = QtWidgets.QPushButton("Choose...")
-        self.modelButton.setFixedSize(200, 30)
-        self.modelButton.clicked.connect(self.onModelButtonClicked)
-        self.scrollAreaFrame.layout().addWidget(self.modelButton, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
 
         # type
@@ -551,8 +539,6 @@ class PedsimAgentEditor(QtWidgets.QWidget):
             self.requestingFollowerProbabilitySlider.hide()
 
     def updateValuesFromPedsimAgent(self):
-        self.setModelPath(self.pedsimAgent.yaml_file)
-
         self.typeComboBox.setCurrentIndex(PedsimAgentType[self.pedsimAgent.type.upper()].value)
         self.amountSpinBox.setValue(self.pedsimAgent.number_of_peds)
         self.vmax_slider.setValue(self.pedsimAgent.vmax)
@@ -591,18 +577,6 @@ class PedsimAgentEditor(QtWidgets.QWidget):
         self.updateValuesFromPedsimAgent()
         return super().show()
 
-    def onModelButtonClicked(self):
-        initial_folder = os.path.join(get_ros_package_path("simulator_setup"), "dynamic_obstacles")
-        res = QtWidgets.QFileDialog.getOpenFileName(parent=self, directory=initial_folder)
-        path = res[0]
-        if path != "":
-            self.setModelPath(path)
-
-    def setModelPath(self, path: str):
-        if os.path.exists(path):
-            self.tempFlatlandModel.load(path)
-            self.modelButton.setText(path.split("/")[-1])
-
     def updatePedsimAgentFromWidgets(self, agent: Pedestrian):
         agent.type = PedsimAgentType(self.typeComboBox.currentIndex()).name.lower()
         agent.number_of_peds = self.amountSpinBox.value()
@@ -636,10 +610,7 @@ class PedsimAgentEditor(QtWidgets.QWidget):
 
         agent.waypoint_mode = PedsimWaypointMode(self.waypointModeComboBox.currentIndex()).value
 
-        agent.yaml_file = self.tempFlatlandModel.path
-
         agent.name = self.name_edit.text()
-        agent.flatlandModel = self.tempFlatlandModel
 
     def onSaveClicked(self):
         self.updatePedsimAgentFromWidgets(self.pedsimAgent)
@@ -679,5 +650,3 @@ class PedsimAgentEditorGlobalConfig(PedsimAgentEditor):
         super().setup_ui()
         self.nameLabel.hide()
         self.name_edit.hide()
-        self.flatlandModelLabel.hide()
-        self.modelButton.hide()

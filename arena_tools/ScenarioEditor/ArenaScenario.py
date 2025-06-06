@@ -3,7 +3,6 @@ import os
 import yaml
 import json
 from .Pedestrian.Pedestrian import Pedestrian
-from .Flatland.FlatlandModel import *
 from ..utils.HelperFunctions import *
 
 

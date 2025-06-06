@@ -1,8 +1,5 @@
 import numpy as np
-import rospkg
-import os
 from enum import Enum
-from arena_tools.ScenarioEditor.Flatland.FlatlandModel import FlatlandModel
 from arena_tools.utils.HelperFunctions import *
 
 
@@ -77,19 +74,11 @@ class Pedestrian:
         self.waypoints = []  # list of 2D numpy arrays
         self.waypoint_mode = 0
 
-    def loadFlatlandModel(self, path: str):
-        self.yaml_file = path
-        model = FlatlandModel()
-        model.load(path)
-        self.flatlandModel = model
-
     def __eq__(self, other):
         if not isinstance(other, Pedestrian):
             return NotImplemented
 
         if self.name != other.name:
-            return False
-        if self.flatlandModel != other.flatlandModel:
             return False
 
         if self.id != other.id:

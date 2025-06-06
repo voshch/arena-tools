@@ -4,6 +4,7 @@ import pathlib
 from arena_tools.utils.HelperFunctions import *
 from arena_tools.utils.QtExtensions import *
 from arena_tools.ScenarioEditor.ArenaScenarioEditor import RosMapData
+import arena_simulation_setup.world
 
 
 class RobotPath:
@@ -230,11 +231,7 @@ class PathCreator(QtWidgets.QMainWindow):
         self.splitter.setSizes([300, 700])
 
     def onBrowseMapsClicked(self):
-        initial_folder = pathlib.Path.home()
-
-        sim_setup_path = get_ros_package_path("simulator_setup")
-        if sim_setup_path != "":
-            initial_folder = pathlib.Path(sim_setup_path) / "maps"
+        initial_folder = arena_simulation_setup.world.World.base_dir()
 
         res = QtWidgets.QFileDialog.getOpenFileName(
             parent=self, caption="Select map.yaml File", directory=str(initial_folder)
@@ -277,10 +274,8 @@ class PathCreator(QtWidgets.QMainWindow):
         self.path_data.num_images = self.num_images_spin_box.value()
 
         # get save file name
-        initial_folder = pathlib.Path.home()
-        sim_setup_path = get_ros_package_path("simulator_setup")
-        if sim_setup_path != "":
-            initial_folder = pathlib.Path(sim_setup_path)
+        initial_folder = arena_simulation_setup.world.World.base_dir()
+
         res = QtWidgets.QFileDialog.getSaveFileName(
             parent=self, caption="Select map.yaml File", directory=str(initial_folder)
         )

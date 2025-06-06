@@ -89,15 +89,6 @@ def remove_file_ending(file_name: str) -> str:
     return file_name
 
 
-def add_map_path_prefix(path: str) -> str:
-    return get_simulation_setup_pkg_prefix("maps/" + path)
-
-
-def delete_map_path_prefix(path: str) -> str:
-    parts = path.split("/")
-    return parts[-2] + "/" + parts[-1]
-
-
 def create_model_config(path_in: str, model_name: str):
     """
     create_model_config creates sdf config file for a given model/mesh

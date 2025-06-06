@@ -4,12 +4,14 @@ import os
 import time
 import copy
 from typing import Tuple, List
-from .Flatland.FlatlandBodyEditor import *
 from .Pedestrian.Pedestrian import Pedestrian
 from .Pedestrian.PedestrianEditor import PedsimAgentEditor, PedsimAgentEditorGlobalConfig
+from .Flatland.FlatlandObject import FlatlandObject
 from .ArenaScenario import *
 from arena_tools.utils.QtExtensions import *
 from arena_tools.utils.HelperFunctions import *
+import arena_simulation_setup.world
+import arena_simulation_setup.entities.obstacles.static
 
 
 class RosMapData():
@@ -240,23 +242,12 @@ class PedsimAgentWidget(QtWidgets.QFrame):
         # update path
         painter_path = QtGui.QPainterPath()
         painter_path.setFillRule(QtCore.Qt.WindingFill)
-        # get shapes from the agent and convert them to a path
-        for body in self.pedsimAgent.flatlandModel.bodies.values():
-            # skip safety distance circle
-            if body.name == "safety_dist_circle":
-                continue
-            # set color
-            brush = QtGui.QBrush(body.color, QtCore.Qt.BrushStyle.SolidPattern)
-            self.graphicsPathItem.setBrush(brush)
-            # compose path
-            for footprint in body.footprints:
-                if isinstance(footprint, CircleFlatlandFootprint):
-                    center = QtCore.QPointF(footprint.center[0], footprint.center[1])
-                    radius = footprint.radius
-                    painter_path.addEllipse(center, radius, radius)
-                if isinstance(footprint, PolygonFlatlandFootprint):
-                    polygon = QtGui.QPolygonF([QtCore.QPointF(point[0], point[1]) for point in footprint.points])
-                    painter_path.addPolygon(polygon)
+        # visualize
+        brush = QtGui.QBrush(QtGui.QColor('#ffff90'), QtCore.Qt.BrushStyle.SolidPattern)
+        self.graphicsPathItem.setBrush(brush)
+        center = QtCore.QPointF(0, 0)
+        radius = 1
+        painter_path.addEllipse(center, radius, radius)
         self.graphicsPathItem.setPath(painter_path)
         # update text
         self.graphicsPathItem.textItem.setPlainText(self.name_label.text())
@@ -369,7 +360,6 @@ class FlatlandObjectWidget(QtWidgets.QFrame):
         self.graphicsScene = graphicsScene
         self.graphicsView = graphicsView
         self.flatlandObject = flatlandObjectIn
-        # self.modelPath = flatlandObjectIn.flatlandModel.path
 
         # create graphics path item
         self.graphicsPathItem = ArenaGraphicsPathItem(self)
@@ -413,9 +403,7 @@ class FlatlandObjectWidget(QtWidgets.QFrame):
         self.layout().addWidget(self.browse_button, 2, 1, 1, -1)
 
     def onBrowseClicked(self):
-        default_folder = get_simulation_setup_pkg_prefix("")
-        if default_folder != "":
-            default_folder = os.path.join(default_folder, "obstacles")
+        default_folder = arena_simulation_setup.entities.obstacles.static.Obstacle.base_dir()
         res = QtWidgets.QFileDialog.getOpenFileName(self, "Select Flatland Model File", default_folder)
         path = res[0]
         if os.path.exists(path):
@@ -423,7 +411,6 @@ class FlatlandObjectWidget(QtWidgets.QFrame):
             name = pathlib.Path(path).parts[-1]
             self.browse_button.setText(remove_file_ending(name))
             # update flatland object and graphics item
-            self.flatlandObject.flatlandModel.load(path)
             self.updateGraphicsPathItemFromFlatlandObject()
 
     def handleMouseDoubleClick(self):
@@ -450,23 +437,11 @@ class FlatlandObjectWidget(QtWidgets.QFrame):
         # update path
         painter_path = QtGui.QPainterPath()
         painter_path.setFillRule(QtCore.Qt.WindingFill)
-        # get shapes from the agent and convert them to a path
-        for body in self.flatlandObject.flatlandModel.bodies.values():
-            # skip safety distance circle
-            if body.name == "safety_dist_circle":
-                continue
-            # set color
-            brush = QtGui.QBrush(body.color, QtCore.Qt.BrushStyle.SolidPattern)
-            self.graphicsPathItem.setBrush(brush)
-            # compose path
-            for footprint in body.footprints:
-                if isinstance(footprint, CircleFlatlandFootprint):
-                    center = QtCore.QPointF(footprint.center[0], footprint.center[1])
-                    radius = footprint.radius
-                    painter_path.addEllipse(center, radius, radius)
-                if isinstance(footprint, PolygonFlatlandFootprint):
-                    polygon = QtGui.QPolygonF([QtCore.QPointF(point[0], point[1]) for point in footprint.points])
-                    painter_path.addPolygon(polygon)
+        # visu
+        brush = QtGui.QBrush(QtGui.QColor('#90ff90'), QtCore.Qt.BrushStyle.SolidPattern)
+        self.graphicsPathItem.setBrush(brush)
+        polygon = QtGui.QPolygonF([QtCore.QPointF(point[0], point[1]) for point in [[-0.5, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, 0.5]]])
+        painter_path.addPolygon(polygon)
         self.graphicsPathItem.setPath(painter_path)
         # update rotation
         angle = rad_to_deg(self.flatlandObject.angle)
@@ -482,12 +457,6 @@ class FlatlandObjectWidget(QtWidgets.QFrame):
         # update name label
         self.name_label.setText(self.flatlandObject.name)
         # update browse button
-        if self.flatlandObject.flatlandModel.path == "":
-            self.browse_button.setText("Browse...")
-        else:
-            name = pathlib.Path(self.flatlandObject.flatlandModel.path).parts[-1]
-            self.browse_button.setText(remove_file_ending(name))
-        # update item scene
         self.updateGraphicsPathItemFromFlatlandObject()
 
     def save(self):
@@ -706,7 +675,6 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
             global_agent = copy.deepcopy(self.pedsimAgentsGlobalConfigWidget.pedsimAgent)
             # preserve individual values
             global_agent.name = w.pedsimAgent.name
-            global_agent.flatlandModel = w.pedsimAgent.flatlandModel
             global_agent.pos = w.pedsimAgent.pos
             global_agent.waypoints = w.pedsimAgent.waypoints
             # set new agent
@@ -716,7 +684,7 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
             w.handleEditorSaved()
 
     def onSetMapClicked(self):
-        initial_folder = get_simulation_setup_pkg_prefix("maps")
+        initial_folder = arena_simulation_setup.world.World.base_dir()
         res = QtWidgets.QFileDialog.getOpenFileName(parent=self, directory=initial_folder)
         path = res[0]
         if path != "":
@@ -869,7 +837,7 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
         pass
 
     def onOpenClicked(self):
-        initial_folder = os.path.join(get_ros_package_path("task-generator"), "scenarios")
+        initial_folder = os.path.join(arena_simulation_setup.world.World.base_dir(), "scenarios")
         res = QtWidgets.QFileDialog.getOpenFileName(parent=self, directory=initial_folder)
         path = res[0]
         if path != "":
@@ -881,7 +849,7 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
             self.onSaveAsClicked()
 
     def onSaveAsClicked(self) -> bool:
-        initial_folder = os.path.join(get_ros_package_path("task-generator"), "scenarios")
+        initial_folder = os.path.join(arena_simulation_setup.world.World.base_dir(), "scenarios")
 
         res = QtWidgets.QFileDialog.getSaveFileName(parent=self, directory=initial_folder)
         path = res[0]
