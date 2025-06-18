@@ -288,12 +288,12 @@ class WaypointGraphicsEllipseItem(ArenaGraphicsEllipseItem):
 
     def setPosNoEvent(self, x, y):
         super().setPosNoEvent(x, y)
-        self.waypointWidget.pedsimAgentWidget.drawWaypointPath()
+        self.waypointWidget.pedestrianAgentWidget.drawWaypointPath()
 
     def itemChange(self, change, value):
         if change == QtWidgets.QGraphicsItem.GraphicsItemChange.ItemPositionChange:
             self.waypointWidget.updateSpinBoxesFromGraphicsItem()
-            self.waypointWidget.pedsimAgentWidget.drawWaypointPath()
+            self.waypointWidget.pedestrianAgentWidget.drawWaypointPath()
 
         return super().itemChange(change, value)
 
@@ -812,3 +812,78 @@ class ArenaQGraphicsView(QtWidgets.QGraphicsView):
         # Move scene to old position
         delta = newPos - oldPos
         self.translate(delta.x(), delta.y())
+
+class ComboBoxDialog(QtWidgets.QDialog):
+    def __init__(
+            self, 
+            parent=None, 
+            combo_box_items:list[str]=[""], 
+            window_title:str="Choose",
+            label:str="Please select:"
+        ):
+        super().__init__(parent)
+        self.setWindowTitle(window_title)
+
+        # REMOVE close button AND minimize/maximize buttons
+        self.setWindowFlags(QtCore.Qt.Dialog | QtCore.Qt.CustomizeWindowHint | QtCore.Qt.WindowTitleHint)
+
+        layout = QtWidgets.QVBoxLayout(self)
+
+        self.label = QtWidgets.QLabel(label)
+        layout.addWidget(self.label)
+
+        self.combo_box = QtWidgets.QComboBox()
+        self.combo_box.addItems(combo_box_items)
+        layout.addWidget(self.combo_box)
+
+        self.confirm_button = QtWidgets.QPushButton("Confirm")
+        self.confirm_button.clicked.connect(self.accept)  # Closes dialog and returns result = Accepted
+        layout.addWidget(self.confirm_button)
+
+        self.setModal(True)  # Makes it block interaction with the parent window
+        # self.setFixedSize(300, 150)
+
+    def get_selected_option(self):
+        return self.combo_box.currentText()
+    
+    def closeEvent(self, event):
+        # Prevent the dialog from closing
+        event.ignore()
+
+    def keyPressEvent(self, event):
+        # Ignore ESC key
+        if event.key() == QtCore.Qt.Key_Escape:
+            event.ignore()  
+        else:
+            super().keyPressEvent(event)
+
+
+class LineEditDialog(QtWidgets.QDialog):
+    def __init__(
+            self, 
+            parent=None, 
+            window_title:str="Type",
+            label:str="Please type:",
+            placeholder_text:str="Example text"
+        ):
+        super().__init__(parent)
+        self.setWindowTitle(window_title)
+
+        layout = QtWidgets.QVBoxLayout(self)
+
+        self.label = QtWidgets.QLabel(label)
+        layout.addWidget(self.label)
+
+        self.line_edit = QtWidgets.QLineEdit()
+        self.line_edit.setPlaceholderText(placeholder_text)
+        layout.addWidget(self.line_edit)
+
+        self.confirm_button = QtWidgets.QPushButton("Confirm")
+        self.confirm_button.clicked.connect(self.accept)  # Closes dialog and returns result = Accepted
+        layout.addWidget(self.confirm_button)
+
+        self.setModal(True)  # Makes it block interaction with the parent window
+        # self.setFixedSize(300, 150)
+
+    def get_typed_text(self):
+        return self.line_edit.text()

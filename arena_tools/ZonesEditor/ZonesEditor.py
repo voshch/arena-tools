@@ -8,6 +8,7 @@ from arena_tools.utils.QtExtensions import *
 from arena_tools.utils.HelperFunctions import *
 from arena_tools.ZonesEditor.ZonePropertyEditor import *
 from arena_tools.ScenarioEditor.ArenaScenarioEditor import RosMapData
+import arena_simulation_setup
 
 
 class PointWidget(QtWidgets.QWidget):
@@ -368,6 +369,29 @@ class ZonesEditor(QtWidgets.QMainWindow):
         self.currentSaveFile = ""
 
         self.setupUI()
+        QtCore.QTimer.singleShot(0, self.show_select_world_dialog)
+
+    def show_select_world_dialog(self):
+        dialog = ComboBoxDialog(
+            self, 
+            combo_box_items=arena_simulation_setup.world.World.list(),
+            window_title="Choose world",
+            label="Please select a world:"
+        )
+        result = dialog.exec_()  # Modal dialog, execution pauses here
+
+        if result == QtWidgets.QDialog.Accepted:
+            selected_world = dialog.get_selected_option()
+            print(f"User selected: {selected_world}")
+            self.statusBar().showMessage(f"Selected: {selected_world}")
+
+            self.selected_world = selected_world
+            path = pathlib.Path(arena_simulation_setup.world.World(self.selected_world).map.path) / "map.yaml"
+            if path.is_file():
+                self.setMap(str(path))
+            
+        else:
+            print("Dialog was rejected or closed unexpectedly.")
 
     def setupUI(self):
         self.updateWindowTitle()
@@ -510,12 +534,7 @@ class ZonesEditor(QtWidgets.QMainWindow):
             self.statusBar().showMessage(msg, 10 * 1000)
 
     def onLoadMapClicked(self):
-        res = QtWidgets.QFileDialog.getOpenFileName(parent=self, filter="YAML File (*.yaml)")
-        path = res[0]
-        if path != "":
-            self.setMap(path)
-            self.currentDirectory = ""
-            self.updateWindowTitle()
+        self.show_select_world_dialog()
 
     def onLoadZonesClicked(self):
         res = QtWidgets.QFileDialog.getOpenFileName(parent=self, filter="YAML File (*.yaml)")
@@ -531,10 +550,11 @@ class ZonesEditor(QtWidgets.QMainWindow):
         self.onSaveAsClicked()
 
     def onSaveAsClicked(self) -> bool:
-        res = QtWidgets.QFileDialog.getSaveFileName(parent=self, directory=self.currentDirectory + "/" + self.currentSaveFile, filter="YAML File (*.yaml)")
-        path = res[0]
-        if path != "":
-            return self.save(path)
+        path = pathlib.Path(arena_simulation_setup.world.World(self.selected_world).map.zones)
+        if path!= "":
+            self.statusBar().showMessage(f"Saved at: {str(path)}")
+            return self.save(str(path))
+
         return False
 
     #####

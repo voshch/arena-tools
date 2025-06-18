@@ -4,28 +4,28 @@ import copy
 from arena_tools.ScenarioEditor.ArenaScenario import *
 from arena_tools.utils.QtExtensions import *
 from arena_tools.utils.HelperFunctions import *
-from .Pedestrian import PedsimAgentType, PedsimWaypointMode, PedsimStartupMode
+from .Pedestrian import PedestrianAgentType, PedestrianWaypointMode, PedestrianStartupMode
 
 import arena_simulation_setup.entities.obstacles.dynamic
 
 
-class PedsimAgentEditor(QtWidgets.QWidget):
+class PedestrianAgentEditor(QtWidgets.QWidget):
     editorSaved = QtCore.pyqtSignal()
 
-    def __init__(self, pedsimAgentWidget=None, **kwargs):
+    def __init__(self, pedestrianAgentWidget=None, **kwargs):
         super().__init__(**kwargs)
-        self.pedsimAgentWidget = pedsimAgentWidget
-        if pedsimAgentWidget is None:
-            self.pedsimAgent = Pedestrian('1')
+        self.pedestrianAgentWidget = pedestrianAgentWidget
+        if pedestrianAgentWidget is None:
+            self.pedestrianAgent = Pedestrian('Pedestrian 1')
         else:
-            self.pedsimAgent = pedsimAgentWidget.pedsimAgent
+            self.pedestrianAgent = pedestrianAgentWidget.pedestrianAgent
         self.setup_ui()
-        self.updateValuesFromPedsimAgent()
+        self.updateValuesFromPedestrianAgent()
         self.updateWidgetsFromSelectedType()
         self.updateWidgetsFromSelectedStartupMode()
 
     def setup_ui(self):
-        self.setWindowTitle("Pedsim Agent Editor")
+        self.setWindowTitle("Pedestrian Agent Editor")
         self.setLayout(QtWidgets.QGridLayout())
         self.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
         self.resize(600, 600)
@@ -59,7 +59,7 @@ class PedsimAgentEditor(QtWidgets.QWidget):
         self.nameLabel.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(self.nameLabel, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
         # editbox
-        name = self.pedsimAgentWidget.name_label.text() if self.pedsimAgentWidget is not None else "global agent"
+        name = self.pedestrianAgentWidget.name_label.text() if self.pedestrianAgentWidget is not None else "global agent"
         self.name_edit = QtWidgets.QLineEdit(name)
         self.name_edit.setFixedSize(200, 30)
         self.scrollAreaFrame.layout().addWidget(self.name_edit, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
@@ -72,11 +72,25 @@ class PedsimAgentEditor(QtWidgets.QWidget):
         self.scrollAreaFrame.layout().addWidget(type_label, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
         # dropdown
         self.typeComboBox = QtWidgets.QComboBox()
-        for agent_type in PedsimAgentType:
+        for agent_type in PedestrianAgentType:
             self.typeComboBox.insertItem(agent_type.value, agent_type.name.lower())
         self.typeComboBox.setFixedSize(200, 30)
         self.typeComboBox.currentIndexChanged.connect(self.updateWidgetsFromSelectedType)
         self.scrollAreaFrame.layout().addWidget(self.typeComboBox, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
+        vertical_idx += 1
+
+        # model
+        # label
+        model_label = QtWidgets.QLabel("Model")
+        model_label.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
+        self.scrollAreaFrame.layout().addWidget(model_label, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
+        # dropdown
+        self.modelComboBox = QtWidgets.QComboBox()
+        for index, agent_model in enumerate(arena_simulation_setup.entities.obstacles.dynamic.DynamicObstacle.list()):
+            self.modelComboBox.insertItem(index, agent_model)
+        self.modelComboBox.setFixedSize(200, 30)
+        self.modelComboBox.currentIndexChanged.connect(self.updateWidgetsFromSelectedModel)
+        self.scrollAreaFrame.layout().addWidget(self.modelComboBox, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
 
         # amount
@@ -99,7 +113,7 @@ class PedsimAgentEditor(QtWidgets.QWidget):
         self.scrollAreaFrame.layout().addWidget(label, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
         # dropdown
         self.waypointModeComboBox = QtWidgets.QComboBox()
-        for mode in PedsimWaypointMode:
+        for mode in PedestrianWaypointMode:
             self.waypointModeComboBox.insertItem(mode.value, mode.name.lower())
         self.waypointModeComboBox.setFixedSize(200, 30)
         self.scrollAreaFrame.layout().addWidget(self.waypointModeComboBox, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
@@ -112,7 +126,7 @@ class PedsimAgentEditor(QtWidgets.QWidget):
         self.scrollAreaFrame.layout().addWidget(label, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
         # dropdown
         self.startupModeComboBox = QtWidgets.QComboBox()
-        for mode in PedsimStartupMode:
+        for mode in PedestrianStartupMode:
             self.startupModeComboBox.insertItem(mode.value, mode.name.lower())
         self.startupModeComboBox.setFixedSize(200, 30)
         self.startupModeComboBox.currentIndexChanged.connect(self.updateWidgetsFromSelectedStartupMode)
@@ -378,26 +392,26 @@ class PedsimAgentEditor(QtWidgets.QWidget):
         self.layout().addWidget(self.save_button, 1, 0, -1, -1)
 
     def updateWidgetsFromSelectedStartupMode(self):
-        mode = PedsimStartupMode(self.startupModeComboBox.currentIndex())
-        if mode == PedsimStartupMode.DEFAULT:
+        mode = PedestrianStartupMode(self.startupModeComboBox.currentIndex())
+        if mode == PedestrianStartupMode.DEFAULT:
             self.waitTimeLabel.hide()
             self.waitTimeSpinBox.hide()
             self.triggerZoneLabel.hide()
             self.triggerZoneSpinBox.hide()
-        elif mode == PedsimStartupMode.WAIT_TIMER:
+        elif mode == PedestrianStartupMode.WAIT_TIMER:
             self.waitTimeLabel.show()
             self.waitTimeSpinBox.show()
             self.triggerZoneLabel.hide()
             self.triggerZoneSpinBox.hide()
-        elif mode == PedsimStartupMode.TRIGGER_ZONE:
+        elif mode == PedestrianStartupMode.TRIGGER_ZONE:
             self.waitTimeLabel.hide()
             self.waitTimeSpinBox.hide()
             self.triggerZoneLabel.show()
             self.triggerZoneSpinBox.show()
 
     def updateWidgetsFromSelectedType(self):
-        agent_type = PedsimAgentType(self.typeComboBox.currentIndex())
-        if agent_type in [PedsimAgentType.ADULT, PedsimAgentType.CHILD, PedsimAgentType.ELDER]:
+        agent_type = PedestrianAgentType(self.typeComboBox.currentIndex())
+        if agent_type in [PedestrianAgentType.ADULT, PedestrianAgentType.CHILD, PedestrianAgentType.ELDER]:
             # max talking distance
             self.maxTalkingDistanceLabel.show()
             self.maxTalkingDistanceSlider.show()
@@ -444,7 +458,7 @@ class PedsimAgentEditor(QtWidgets.QWidget):
             self.requestingFollowerProbabilityLabel.show()
             self.requestingFollowerProbabilitySlider.show()
 
-        elif agent_type == PedsimAgentType.FORKLIFT:
+        elif agent_type == PedestrianAgentType.FORKLIFT:
             # max talking distance
             self.maxTalkingDistanceLabel.hide()
             self.maxTalkingDistanceSlider.hide()
@@ -491,7 +505,7 @@ class PedsimAgentEditor(QtWidgets.QWidget):
             self.requestingFollowerProbabilityLabel.hide()
             self.requestingFollowerProbabilitySlider.hide()
 
-        elif agent_type == PedsimAgentType.SERVICEROBOT:
+        elif agent_type == PedestrianAgentType.SERVICEROBOT:
             # max talking distance
             self.maxTalkingDistanceLabel.hide()
             self.maxTalkingDistanceSlider.hide()
@@ -538,51 +552,57 @@ class PedsimAgentEditor(QtWidgets.QWidget):
             self.requestingFollowerProbabilityLabel.hide()
             self.requestingFollowerProbabilitySlider.hide()
 
-    def updateValuesFromPedsimAgent(self):
-        self.typeComboBox.setCurrentIndex(PedsimAgentType[self.pedsimAgent.type.upper()].value)
-        self.amountSpinBox.setValue(self.pedsimAgent.number_of_peds)
-        self.vmax_slider.setValue(self.pedsimAgent.vmax)
+    def updateValuesFromPedestrianAgent(self):
+        self.typeComboBox.setCurrentIndex(PedestrianAgentType[self.pedestrianAgent.type.upper()].value)
+        self.modelComboBox.setCurrentText(self.pedestrianAgent.model)
+        self.modelComboBox.setCurrentText(self.pedestrianAgent.model)
+        self.amountSpinBox.setValue(self.pedestrianAgent.number_of_peds)
+        self.vmax_slider.setValue(self.pedestrianAgent.vmax)
 
-        self.startupModeComboBox.setCurrentIndex(PedsimStartupMode[self.pedsimAgent.start_up_mode.upper()].value)
-        self.waitTimeSpinBox.setValue(self.pedsimAgent.wait_time)
-        self.triggerZoneSpinBox.setValue(self.pedsimAgent.trigger_zone_radius)
+        self.startupModeComboBox.setCurrentIndex(PedestrianStartupMode[self.pedestrianAgent.start_up_mode.upper()].value)
+        self.waitTimeSpinBox.setValue(self.pedestrianAgent.wait_time)
+        self.triggerZoneSpinBox.setValue(self.pedestrianAgent.trigger_zone_radius)
 
-        self.individualTalkingProbabilitySlider.setValue(self.pedsimAgent.chatting_probability)
-        self.groupTalkProbabilitySlider.setValue(self.pedsimAgent.group_talking_probability)
-        self.talkWalkProbabilitySlider.setValue(self.pedsimAgent.talking_and_walking_probability)
-        self.requestingServiceProbabilitySlider.setValue(self.pedsimAgent.requesting_service_probability)
-        self.requestingGuideProbabilitySlider.setValue(self.pedsimAgent.requesting_guide_probability)
-        self.requestingFollowerProbabilitySlider.setValue(self.pedsimAgent.requesting_follower_probability)
+        self.individualTalkingProbabilitySlider.setValue(self.pedestrianAgent.chatting_probability)
+        self.groupTalkProbabilitySlider.setValue(self.pedestrianAgent.group_talking_probability)
+        self.talkWalkProbabilitySlider.setValue(self.pedestrianAgent.talking_and_walking_probability)
+        self.requestingServiceProbabilitySlider.setValue(self.pedestrianAgent.requesting_service_probability)
+        self.requestingGuideProbabilitySlider.setValue(self.pedestrianAgent.requesting_guide_probability)
+        self.requestingFollowerProbabilitySlider.setValue(self.pedestrianAgent.requesting_follower_probability)
 
-        self.maxTalkingDistanceSlider.setValue(self.pedsimAgent.max_talking_distance)
-        self.maxServiceDistanceSlider.setValue(self.pedsimAgent.max_servicing_radius)
+        self.maxTalkingDistanceSlider.setValue(self.pedestrianAgent.max_talking_distance)
+        self.maxServiceDistanceSlider.setValue(self.pedestrianAgent.max_servicing_radius)
 
-        self.individualTalkingBaseTimeSlider.setValue(self.pedsimAgent.talking_base_time)
-        self.groupTalkBaseTimeSlider.setValue(self.pedsimAgent.group_talking_base_time)
-        self.talkWalkBaseTimeSlider.setValue(self.pedsimAgent.talking_and_walking_base_time)
-        self.requestingServiceReceivingBaseTimeSlider.setValue(self.pedsimAgent.receiving_service_base_time)
-        self.requestingServiceRequestingBaseTimeSlider.setValue(self.pedsimAgent.requesting_service_base_time)
+        self.individualTalkingBaseTimeSlider.setValue(self.pedestrianAgent.talking_base_time)
+        self.groupTalkBaseTimeSlider.setValue(self.pedestrianAgent.group_talking_base_time)
+        self.talkWalkBaseTimeSlider.setValue(self.pedestrianAgent.talking_and_walking_base_time)
+        self.requestingServiceReceivingBaseTimeSlider.setValue(self.pedestrianAgent.receiving_service_base_time)
+        self.requestingServiceRequestingBaseTimeSlider.setValue(self.pedestrianAgent.requesting_service_base_time)
 
         # forces
-        self.desiredForceSlider.setValue(self.pedsimAgent.force_factor_desired)
-        self.obstacleForceSlider.setValue(self.pedsimAgent.force_factor_obstacle)
-        self.socialForceSlider.setValue(self.pedsimAgent.force_factor_social)
-        self.robotForceSlider.setValue(self.pedsimAgent.force_factor_robot)
+        self.desiredForceSlider.setValue(self.pedestrianAgent.force_factor_desired)
+        self.obstacleForceSlider.setValue(self.pedestrianAgent.force_factor_obstacle)
+        self.socialForceSlider.setValue(self.pedestrianAgent.force_factor_social)
+        self.robotForceSlider.setValue(self.pedestrianAgent.force_factor_robot)
 
-        self.waypointModeComboBox.setCurrentIndex(PedsimWaypointMode(self.pedsimAgent.waypoint_mode).value)
+        self.waypointModeComboBox.setCurrentIndex(PedestrianWaypointMode(self.pedestrianAgent.waypoint_mode).value)
 
-        self.name_edit.setText(self.pedsimAgent.name)
+        self.name_edit.setText(self.pedestrianAgent.name)
+
+    def updateWidgetsFromSelectedModel(self):
+        ...
 
     def show(self):
-        self.updateValuesFromPedsimAgent()
+        self.updateValuesFromPedestrianAgent()
         return super().show()
 
-    def updatePedsimAgentFromWidgets(self, agent: Pedestrian):
-        agent.type = PedsimAgentType(self.typeComboBox.currentIndex()).name.lower()
+    def updatePedestrianAgentFromWidgets(self, agent: Pedestrian):
+        agent.type = PedestrianAgentType(self.typeComboBox.currentIndex()).name.lower()
+        agent.model = self.modelComboBox.currentText()
         agent.number_of_peds = self.amountSpinBox.value()
         agent.vmax = self.vmax_slider.getValue()
 
-        agent.start_up_mode = PedsimStartupMode(self.startupModeComboBox.currentIndex()).name.lower()
+        agent.start_up_mode = PedestrianStartupMode(self.startupModeComboBox.currentIndex()).name.lower()
         agent.wait_time = self.waitTimeSpinBox.value()
         agent.trigger_zone_radius = self.triggerZoneSpinBox.value()
 
@@ -608,20 +628,20 @@ class PedsimAgentEditor(QtWidgets.QWidget):
         agent.force_factor_social = self.socialForceSlider.getValue()
         agent.force_factor_robot = self.robotForceSlider.getValue()
 
-        agent.waypoint_mode = PedsimWaypointMode(self.waypointModeComboBox.currentIndex()).value
+        agent.waypoint_mode = PedestrianWaypointMode(self.waypointModeComboBox.currentIndex()).value
 
         agent.name = self.name_edit.text()
 
     def onSaveClicked(self):
-        self.updatePedsimAgentFromWidgets(self.pedsimAgent)
+        self.updatePedestrianAgentFromWidgets(self.pedestrianAgent)
         self.hide()
         self.editorSaved.emit()
 
     def closeEvent(self, event):
         # check if any changes have been made
-        current_agent = copy.deepcopy(self.pedsimAgent)
-        self.updatePedsimAgentFromWidgets(current_agent)
-        if self.pedsimAgent != current_agent:
+        current_agent = copy.deepcopy(self.pedestrianAgent)
+        self.updatePedestrianAgentFromWidgets(current_agent)
+        if self.pedestrianAgent != current_agent:
             # ask user if changes should be saved
             msg_box = QtWidgets.QMessageBox()
             msg_box.setText("Do you want to save changes to this agent?")
@@ -632,15 +652,15 @@ class PedsimAgentEditor(QtWidgets.QWidget):
                 self.onSaveClicked()
             elif ret == QtWidgets.QMessageBox.Discard:
                 # reset to values already saved
-                self.updateValuesFromPedsimAgent()
+                self.updateValuesFromPedestrianAgent()
             elif ret == QtWidgets.QMessageBox.Cancel:
                 event.ignore()
 
 
-class PedsimAgentEditorGlobalConfig(PedsimAgentEditor):
+class PedestrianAgentEditorGlobalConfig(PedestrianAgentEditor):
     """
-    A Pedsim Agent Editor excluding widgets that shouldn't be globally configured
-    and without a parent PedsimAgentWidget.
+    A Pedestrian Agent Editor excluding widgets that shouldn't be globally configured
+    and without a parent PedestrianAgentWidget.
     """
 
     def __init__(self, **kwargs):

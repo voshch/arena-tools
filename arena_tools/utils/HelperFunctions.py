@@ -280,7 +280,7 @@ def createObstacleFile(
 
     def scenario_from_map(map_image, map_metadata, use_map_origin=False):
         """
-        Builds a pedsim scenario having obstacles to separate free space in the map
+        Builds a pedestrian scenario having obstacles to separate free space in the map
         from unknown and occupied space. Everything below 'free_thresh' (in the map
         metadata) is considered free space.
             Parameters:
@@ -289,9 +289,9 @@ def createObstacleFile(
                     file
                 use_map_origin (bool): if True reads the map origin from
                     map_metadata, otherwise sets it to [0, 0, 0] (default).
-                    Integration with pedsim_ros works better in the latter case.
+                    Integration with pedestrian_ros works better in the latter case.
             Returns:
-                scenario (ElementTree): a pedsim scenario as xml element tree
+                scenario (ElementTree): a pedestrian scenario as xml element tree
                 map_walls (array_like): a binary image showing the locations on the
                     map where obstacles have been placed
         """

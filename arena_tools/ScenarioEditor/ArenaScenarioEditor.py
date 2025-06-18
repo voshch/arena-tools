@@ -5,8 +5,7 @@ import time
 import copy
 from typing import Tuple, List
 from .Pedestrian.Pedestrian import Pedestrian
-from .Pedestrian.PedestrianEditor import PedsimAgentEditor, PedsimAgentEditorGlobalConfig
-from .Flatland.FlatlandObject import FlatlandObject
+from .Pedestrian.PedestrianEditor import PedestrianAgentEditor, PedestrianAgentEditorGlobalConfig
 from .ArenaScenario import *
 from arena_tools.utils.QtExtensions import *
 from arena_tools.utils.HelperFunctions import *
@@ -35,10 +34,10 @@ class RosMapData():
 
 
 class WaypointWidget(QtWidgets.QWidget):
-    def __init__(self, pedsimAgentWidget, graphicsScene: QtWidgets.QGraphicsScene, posIn: QtCore.QPointF = None, **kwargs):
+    def __init__(self, pedestrianAgentWidget, graphicsScene: QtWidgets.QGraphicsScene, posIn: QtCore.QPointF = None, **kwargs):
         super().__init__(**kwargs)
         self.id = 0
-        self.pedsimAgentWidget = pedsimAgentWidget  # needed so the ellipse item can trigger a waypoint path redraw
+        self.pedestrianAgentWidget = pedestrianAgentWidget  # needed so the ellipse item can trigger a waypoint path redraw
         # create circle and add to scene
         self.ellipseItem = WaypointGraphicsEllipseItem(self, None, None, -0.25, -0.25, 0.5, 0.5)
         self.graphicsScene = graphicsScene
@@ -107,22 +106,22 @@ class WaypointWidget(QtWidgets.QWidget):
         del self.ellipseItem.keyPressEater  # delete to remove event filter
 
         self.parent().layout().removeWidget(self)
-        self.pedsimAgentWidget.updateWaypointIdLabels()
-        self.pedsimAgentWidget.drawWaypointPath()
+        self.pedestrianAgentWidget.updateWaypointIdLabels()
+        self.pedestrianAgentWidget.drawWaypointPath()
         self.deleteLater()
 
 
-class PedsimAgentWidget(QtWidgets.QFrame):
+class PedestrianAgentWidget(QtWidgets.QFrame):
     '''
     This is a row in the obstacles frame.
     '''
 
-    def __init__(self, id: int, pedsimAgentIn: Pedestrian, graphicsScene: QtWidgets.QGraphicsScene, graphicsView: ArenaQGraphicsView, **kwargs):
+    def __init__(self, id: int, pedestrianAgentIn: Pedestrian, graphicsScene: QtWidgets.QGraphicsScene, graphicsView: ArenaQGraphicsView, **kwargs):
         super().__init__(**kwargs)
         self.id = id
         self.graphicsScene = graphicsScene
         self.graphicsView = graphicsView
-        self.pedsimAgent = pedsimAgentIn
+        self.pedestrianAgent = pedestrianAgentIn
 
         # create path item
         self.graphicsPathItem = ArenaGraphicsPathItem(self)
@@ -130,8 +129,8 @@ class PedsimAgentWidget(QtWidgets.QFrame):
         self.graphicsScene.addItem(self.graphicsPathItem)
         # setup widgets
         self.setup_ui()
-        # setup pedsim agent editor
-        self.pedestrian_editor = PedsimAgentEditor(self, parent=self.parent(), flags=QtCore.Qt.WindowType.Window)
+        # setup pedestrian agent editor
+        self.pedestrian_editor = PedestrianAgentEditor(self, parent=self.parent(), flags=QtCore.Qt.WindowType.Window)
         self.pedestrian_editor.editorSaved.connect(self.handleEditorSaved)
 
         # setup waypoints
@@ -154,14 +153,14 @@ class PedsimAgentWidget(QtWidgets.QFrame):
         # add to scene
         graphicsScene.addItem(self.waypointPathItem)
 
-        self.updateEverythingFromPedsimAgent()
+        self.updateEverythingFromPedestrianAgent()
 
     def setup_ui(self):
         self.setLayout(QtWidgets.QGridLayout())
         self.setFrameStyle(QtWidgets.QFrame.Shape.Box | QtWidgets.QFrame.Shadow.Raised)
 
         # name label
-        self.name_label = QtWidgets.QLabel(self.pedsimAgent.name)
+        self.name_label = QtWidgets.QLabel(self.pedestrianAgent.name)
         self.layout().addWidget(self.name_label, 0, 0)
 
         # edit button
@@ -175,7 +174,7 @@ class PedsimAgentWidget(QtWidgets.QFrame):
         self.layout().addWidget(self.delete_button, 0, 2)
 
         # position
-        label = QtWidgets.QLabel("Pos:")
+        label = QtWidgets.QLabel("Position:")
         self.layout().addWidget(label, 1, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
         self.posXSpinBox = ArenaQDoubleSpinBox()
         self.posXSpinBox.valueChanged.connect(self.updateGraphicsPathItemFromSpinBoxes)
@@ -238,7 +237,7 @@ class PedsimAgentWidget(QtWidgets.QFrame):
             self.drawWaypointPath()
             self.graphicsPathItem.updateTextItemPos()
 
-    def updateGraphicsPathItemFromPedsimAgent(self):
+    def updateGraphicsPathItemFromPedestrianAgent(self):
         # update path
         painter_path = QtGui.QPainterPath()
         painter_path.setFillRule(QtCore.Qt.WindingFill)
@@ -253,34 +252,34 @@ class PedsimAgentWidget(QtWidgets.QFrame):
         self.graphicsPathItem.textItem.setPlainText(self.name_label.text())
         self.graphicsPathItem.updateTextItemPos()
 
-    def setPedsimAgent(self, agent: Pedestrian):
-        self.pedsimAgent = agent
-        self.updateEverythingFromPedsimAgent()
+    def setPedestrianAgent(self, agent: Pedestrian):
+        self.pedestrianAgent = agent
+        self.updateEverythingFromPedestrianAgent()
 
-    def updateEverythingFromPedsimAgent(self):
+    def updateEverythingFromPedestrianAgent(self):
         # position
-        self.posXSpinBox.setValue(self.pedsimAgent.pos[0])
-        self.posYSpinBox.setValue(self.pedsimAgent.pos[1])
+        self.posXSpinBox.setValue(self.pedestrianAgent.pos[0])
+        self.posYSpinBox.setValue(self.pedestrianAgent.pos[1])
         # waypoints
         # remove all waypoint widgets
         for w in self.getWaypointWidgets():
             w.remove()
         # add new waypoints
-        for wp in self.pedsimAgent.waypoints:
+        for wp in self.pedestrianAgent.waypoints:
             pos = QtCore.QPointF(wp[0], wp[1])
             self.addWaypoint(pos)
         # update name label
-        self.updateNameLabelFromPedsimAgent()
+        self.updateNameLabelFromPedestrianAgent()
         # update item scene
-        self.updateGraphicsPathItemFromPedsimAgent()
+        self.updateGraphicsPathItemFromPedestrianAgent()
 
-    def updateNameLabelFromPedsimAgent(self):
-        self.name_label.setText(self.pedsimAgent.name)
+    def updateNameLabelFromPedestrianAgent(self):
+        self.name_label.setText(self.pedestrianAgent.name)
 
     def handleEditorSaved(self):
         # editor was saved, update possibly changed values
-        self.updateNameLabelFromPedsimAgent()
-        self.updateGraphicsPathItemFromPedsimAgent()
+        self.updateNameLabelFromPedestrianAgent()
+        self.updateGraphicsPathItemFromPedestrianAgent()
 
     def updateWaypointIdLabels(self):
         widgets = self.getWaypointWidgets()
@@ -311,17 +310,17 @@ class PedsimAgentWidget(QtWidgets.QFrame):
             self.activeModeWindow.hide()
 
     def save(self):
-        # saves position and waypoints to the pedsim agent
-        # all other attributes should have already been saved by the PedsimAgentEditor
+        # saves position and waypoints to the pedestrian agent
+        # all other attributes should have already been saved by the PedestrianAgentEditor
         # position
         pos_x = self.posXSpinBox.value()
         pos_y = self.posYSpinBox.value()
-        self.pedsimAgent.pos = np.array([pos_x, pos_y])
+        self.pedestrianAgent.pos = np.array([pos_x, pos_y])
         # waypoints
-        self.pedsimAgent.waypoints = []
+        self.pedestrianAgent.waypoints = []
         for w in self.getWaypointWidgets():
             x, y = w.getPos()
-            self.pedsimAgent.waypoints.append(np.array([x, y]))
+            self.pedestrianAgent.waypoints.append(np.array([x, y]))
 
     def remove(self):
         # remove waypoints
@@ -344,145 +343,6 @@ class PedsimAgentWidget(QtWidgets.QFrame):
 
     def onEditClicked(self):
         self.pedestrian_editor.show()
-
-    def onDeleteClicked(self):
-        self.remove()
-
-
-class FlatlandObjectWidget(QtWidgets.QFrame):
-    '''
-    This is a row in the obstacles frame.
-    '''
-
-    def __init__(self, id: int, flatlandObjectIn: FlatlandObject, graphicsScene: QtWidgets.QGraphicsScene, graphicsView: ArenaQGraphicsView, **kwargs):
-        super().__init__(**kwargs)
-        self.id = id
-        self.graphicsScene = graphicsScene
-        self.graphicsView = graphicsView
-        self.flatlandObject = flatlandObjectIn
-
-        # create graphics path item
-        self.graphicsPathItem = ArenaGraphicsPathItem(self)
-        # add to scene
-        self.graphicsScene.addItem(self.graphicsPathItem)
-
-        self.setup_ui()
-
-        self.graphicsPathItem.textItem.setPlainText(self.name_label.text())
-
-        self.updateEverythingFromFlatlandObject()
-
-    def setup_ui(self):
-        self.setLayout(QtWidgets.QGridLayout())
-        self.setFrameStyle(QtWidgets.QFrame.Shape.Box | QtWidgets.QFrame.Shadow.Raised)
-
-        # name label
-        self.name_label = QtWidgets.QLabel("obstacle" + str(self.id))
-        self.layout().addWidget(self.name_label, 0, 0)
-
-        # delete button
-        self.delete_button = QtWidgets.QPushButton("Delete")
-        self.delete_button.clicked.connect(self.onDeleteClicked)
-        self.layout().addWidget(self.delete_button, 0, 2)
-
-        # position
-        label = QtWidgets.QLabel("Pos:")
-        self.layout().addWidget(label, 1, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        self.posXSpinBox = ArenaQDoubleSpinBox()
-        self.posXSpinBox.valueChanged.connect(self.updateGraphicsPathItemFromSpinBoxes)
-        self.layout().addWidget(self.posXSpinBox, 1, 1)
-        self.posYSpinBox = ArenaQDoubleSpinBox()
-        self.posYSpinBox.valueChanged.connect(self.updateGraphicsPathItemFromSpinBoxes)
-        self.layout().addWidget(self.posYSpinBox, 1, 2)
-
-        # folder
-        folder_label = QtWidgets.QLabel("Model:")
-        self.layout().addWidget(folder_label, 2, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        self.browse_button = QtWidgets.QPushButton("Browse...")
-        self.browse_button.clicked.connect(self.onBrowseClicked)
-        self.layout().addWidget(self.browse_button, 2, 1, 1, -1)
-
-    def onBrowseClicked(self):
-        default_folder = arena_simulation_setup.entities.obstacles.static.Obstacle.base_dir()
-        res = QtWidgets.QFileDialog.getOpenFileName(self, "Select Flatland Model File", default_folder)
-        path = res[0]
-        if os.path.exists(path):
-            # set label to show file name
-            name = pathlib.Path(path).parts[-1]
-            self.browse_button.setText(remove_file_ending(name))
-            # update flatland object and graphics item
-            self.updateGraphicsPathItemFromFlatlandObject()
-
-    def handleMouseDoubleClick(self):
-        # function will be called by the graphics item
-        self.onBrowseClicked()
-
-    def handleItemChange(self):
-        # function will be called by the graphics item
-        self.updateSpinBoxesFromGraphicsItem()
-
-    def updateSpinBoxesFromGraphicsItem(self):
-        new_pos = self.graphicsPathItem.mapToScene(self.graphicsPathItem.transformOriginPoint())
-        self.posXSpinBox.setValue(new_pos.x())
-        self.posYSpinBox.setValue(new_pos.y())
-
-    def updateGraphicsPathItemFromSpinBoxes(self):
-        if not self.graphicsPathItem.isDragged:  # prevents recursive loop (spin box <-> moving item)
-            x = self.posXSpinBox.value()
-            y = self.posYSpinBox.value()
-            self.graphicsPathItem.setPosNoEvent(x, y)
-            self.graphicsPathItem.updateTextItemPos()
-
-    def updateGraphicsPathItemFromFlatlandObject(self):
-        # update path
-        painter_path = QtGui.QPainterPath()
-        painter_path.setFillRule(QtCore.Qt.WindingFill)
-        # visu
-        brush = QtGui.QBrush(QtGui.QColor('#90ff90'), QtCore.Qt.BrushStyle.SolidPattern)
-        self.graphicsPathItem.setBrush(brush)
-        polygon = QtGui.QPolygonF([QtCore.QPointF(point[0], point[1]) for point in [[-0.5, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, 0.5]]])
-        painter_path.addPolygon(polygon)
-        self.graphicsPathItem.setPath(painter_path)
-        # update rotation
-        angle = rad_to_deg(self.flatlandObject.angle)
-        self.graphicsPathItem.setRotation(angle)
-        # update text
-        self.graphicsPathItem.textItem.setPlainText(self.flatlandObject.name)
-        self.graphicsPathItem.updateTextItemPos()
-
-    def updateEverythingFromFlatlandObject(self):
-        # position
-        self.posXSpinBox.setValue(self.flatlandObject.pos[0])
-        self.posYSpinBox.setValue(self.flatlandObject.pos[1])
-        # update name label
-        self.name_label.setText(self.flatlandObject.name)
-        # update browse button
-        self.updateGraphicsPathItemFromFlatlandObject()
-
-    def save(self):
-        # saves everything to the flatland object
-
-        # name
-        # can't be edited...
-
-        # position
-        pos_x = self.posXSpinBox.value()
-        pos_y = self.posYSpinBox.value()
-        self.flatlandObject.pos = np.array([pos_x, pos_y])
-        angle = self.graphicsPathItem.rotation()  # this is a value between -180 and 180
-        self.flatlandObject.angle = deg_to_rad(angle)
-
-        # model path
-        # already updated in self.onBrowseClicked()
-
-    def remove(self):
-        # remove items from scene
-        self.graphicsScene.removeItem(self.graphicsPathItem)
-        self.graphicsScene.removeItem(self.graphicsPathItem.textItem)
-        del self.graphicsPathItem.keyPressEater  # delete to remove event filter
-        # remove widget
-        self.parent().layout().removeWidget(self)
-        self.deleteLater()
 
     def onDeleteClicked(self):
         self.remove()
@@ -597,19 +457,43 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
         self.copied = []
         self.lastNameId = 0
 
-        # set default map to empty map if it exists
-        import arena_simulation_setup.world
-
-        path = pathlib.Path(arena_simulation_setup.world.World('map_empty').map.path) / "map.yaml"
+        self.selected_world = "map_empty"
+        path = pathlib.Path(arena_simulation_setup.world.World(self.selected_world).map.path) / "map.yaml"
         if path.is_file():
             self.setMap(str(path))
+        self.selected_scenario = ""
 
-        # create global pedsim settings widget
-        self.pedsimAgentsGlobalConfigWidget = PedsimAgentEditorGlobalConfig()
-        self.pedsimAgentsGlobalConfigWidget.editorSaved.connect(self.onPedsimAgentsGlobalConfigChanged)
+        # create global pedestrian settings widget
+        self.pedestrianAgentsGlobalConfigWidget = PedestrianAgentEditorGlobalConfig()
+        self.pedestrianAgentsGlobalConfigWidget.editorSaved.connect(self.onPedestrianAgentsGlobalConfigChanged)
+
+        QtCore.QTimer.singleShot(0, self.show_select_world_dialog)
+
+    def show_select_world_dialog(self):
+        dialog = ComboBoxDialog(
+            self, 
+            combo_box_items=arena_simulation_setup.world.World.list(),
+            window_title="Choose world",
+            label="Please select a world:"
+        )
+        result = dialog.exec_()  # Modal dialog, execution pauses here
+
+        if result == QtWidgets.QDialog.Accepted:
+            selected_world = dialog.get_selected_option()
+            print(f"User selected: {selected_world}")
+            self.statusBar().showMessage(f"Selected: {selected_world}")
+
+            self.selected_world = selected_world
+            path = pathlib.Path(arena_simulation_setup.world.World(self.selected_world).map.path) / "map.yaml"
+            if path.is_file():
+                self.setMap(str(path))
+            
+            self.show_select_scenario_dialog()
+        else:
+            print("Dialog was rejected or closed unexpectedly.")
 
     def setup_ui(self):
-        self.setWindowTitle("Flatland Scenario Editor")
+        self.setWindowTitle("Scenario Editor")
         self.resize(1300, 700)
         self.move(100, 100)
         icon = QtGui.QIcon()
@@ -629,10 +513,9 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
         file_menu.addAction("Save As...", self.onSaveAsClicked, "Ctrl+Shift+S")
         add_menu = menubar.addMenu("Elements")
         add_menu.addAction("Set Map...", self.onSetMapClicked)
-        add_menu.addAction("Add Pedsim Agent", self.onAddPedsimAgentClicked, "Ctrl+1")
-        add_menu.addAction("Add Flatland Object", self.onAddFlatlandObjectClicked, "Ctrl+2")
-        global_pedsim_settings_menu = menubar.addMenu("Global Configs")
-        global_pedsim_settings_menu.addAction("Pedsim Agents...", self.onPedsimAgentsGlobalConfigClicked)
+        add_menu.addAction("Add Pedestrian Agent", self.onAddPedestrianAgentClicked, "Ctrl+1")
+        global_pedestrian_settings_menu = menubar.addMenu("Global Configs")
+        global_pedestrian_settings_menu.addAction("Pedestrian Agents...", self.onPedestrianAgentsGlobalConfigClicked)
 
         # status bar
         self.statusBar()  # create status bar
@@ -666,29 +549,25 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
         self.robotAgentWidget = RobotAgentWidget(self.gscene, self.gview)
         self.obstacles_frame.layout().addWidget(self.robotAgentWidget)
 
-    def onPedsimAgentsGlobalConfigClicked(self):
-        self.pedsimAgentsGlobalConfigWidget.show()
+    def onPedestrianAgentsGlobalConfigClicked(self):
+        self.pedestrianAgentsGlobalConfigWidget.show()
 
-    def onPedsimAgentsGlobalConfigChanged(self):
-        for w in self.getPedsimAgentWidgets():
+    def onPedestrianAgentsGlobalConfigChanged(self):
+        for w in self.getPedestrianAgentWidgets():
             w.save()
-            global_agent = copy.deepcopy(self.pedsimAgentsGlobalConfigWidget.pedsimAgent)
+            global_agent = copy.deepcopy(self.pedestrianAgentsGlobalConfigWidget.pedestrianAgent)
             # preserve individual values
-            global_agent.name = w.pedsimAgent.name
-            global_agent.pos = w.pedsimAgent.pos
-            global_agent.waypoints = w.pedsimAgent.waypoints
+            global_agent.name = w.pedestrianAgent.name
+            global_agent.pos = w.pedestrianAgent.pos
+            global_agent.waypoints = w.pedestrianAgent.waypoints
             # set new agent
-            w.pedsimAgent = global_agent
-            w.pedsimAgentEditor.pedsimAgent = global_agent
-            w.pedsimAgentEditor.updateValuesFromPedsimAgent()
+            w.pedestrianAgent = global_agent
+            w.pedestrianAgentEditor.pedestrianAgent = global_agent
+            w.pedestrianAgentEditor.updateValuesFromPedestrianAgent()
             w.handleEditorSaved()
 
     def onSetMapClicked(self):
-        initial_folder = arena_simulation_setup.world.World.base_dir()
-        res = QtWidgets.QFileDialog.getOpenFileName(parent=self, directory=initial_folder)
-        path = res[0]
-        if path != "":
-            self.setMap(path)
+        self.show_select_world_dialog()
 
     def setMap(self, path: str):
         self.mapData = RosMapData(path)
@@ -711,53 +590,30 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
             return data
 
     def disableAddWaypointMode(self):
-        widgets = self.getPedsimAgentWidgets()
+        widgets = self.getPedestrianAgentWidgets()
         for w in widgets:
             w.setAddWaypointMode(False)
 
-    def onAddPedsimAgentClicked(self):
+    def onAddPedestrianAgentClicked(self):
         new_agent = Pedestrian(self.generateName())
-        self.arenaScenario.pedsimAgents.append(new_agent)
-        self.addPedsimAgentWidget(new_agent)
+        self.arenaScenario.pedestrianAgents.append(new_agent)
+        self.addPedestrianAgentWidget(new_agent)
 
-    def addPedsimAgentWidget(self, agent: Pedestrian) -> PedsimAgentWidget:
+    def addPedestrianAgentWidget(self, agent: Pedestrian) -> PedestrianAgentWidget:
         '''
-        Adds a new pedsim agent widget with the given agent.
+        Adds a new pedestrian agent widget with the given agent.
         Warning: self.arenaScenario is not updated. Management of self.arenaScenario happens outside of this function.
         '''
-        w = PedsimAgentWidget(self.numObstacles, agent, self.gscene, self.gview, parent=self)
+        w = PedestrianAgentWidget(self.numObstacles, agent, self.gscene, self.gview, parent=self)
         self.obstacles_frame.layout().addWidget(w)
         self.numObstacles += 1
         return w
 
-    def onAddFlatlandObjectClicked(self):
-        new_object = FlatlandObject(self.generateName())
-        self.arenaScenario.staticObstacles.append(new_object)
-        self.addFlatlandObjectWidget(new_object)
-
-    def addFlatlandObjectWidget(self, object: FlatlandObject) -> FlatlandObjectWidget:
-        '''
-        Adds a new flatland object widget with the given agent.
-        Warning: self.arenaScenario is not updated. Management of self.arenaScenario happens outside of this function.
-        '''
-        w = FlatlandObjectWidget(self.numObstacles, object, self.gscene, self.gview)
-        self.obstacles_frame.layout().addWidget(w)
-        self.numObstacles += 1
-        return w
-
-    def getFlatlandObjectWidgets(self) -> List[FlatlandObjectWidget]:
+    def getPedestrianAgentWidgets(self):
         widgets = []
         for i in range(self.obstacles_frame.layout().count()):
             w = self.obstacles_frame.layout().itemAt(i).widget()
-            if w is not None and isinstance(w, FlatlandObjectWidget):
-                widgets.append(w)
-        return widgets
-
-    def getPedsimAgentWidgets(self):
-        widgets = []
-        for i in range(self.obstacles_frame.layout().count()):
-            w = self.obstacles_frame.layout().itemAt(i).widget()
-            if w is not None and isinstance(w, PedsimAgentWidget):
+            if w is not None and isinstance(w, PedestrianAgentWidget):
                 widgets.append(w)
         return widgets
 
@@ -765,15 +621,13 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
         count = 0
         for i in range(self.obstacles_frame.layout().count()):
             w = self.obstacles_frame.layout().itemAt(i).widget()
-            if w is not None and isinstance(w, PedsimAgentWidget):
-                count += 1
-            if w is not None and isinstance(w, FlatlandObjectWidget):
+            if w is not None and isinstance(w, PedestrianAgentWidget):
                 count += 1
         return count
 
     def generateName(self):
         self.lastNameId += 1
-        return str(self.lastNameId)
+        return "Pedestrian " + str(self.lastNameId)
 
     def keyPressEvent(self, event: QtGui.QKeyEvent):
         if event.key() == QtCore.Qt.Key.Key_Escape or event.key() == QtCore.Qt.Key.Key_Return:
@@ -791,20 +645,20 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
         return super().keyPressEvent(event)
 
     def toggleWaypointMode(self):
-        # active waypoint mode for selected pedsim agents
+        # active waypoint mode for selected pedestrian agents
         for item in self.gscene.selectedItems():
             if hasattr(item, "parentWidget"):
                 widget = item.parentWidget
-                if isinstance(widget, PedsimAgentWidget):
+                if isinstance(widget, PedestrianAgentWidget):
                     widget.onAddWaypointClicked()
 
     def pasteElements(self):
         # duplicate copied items
         for item in self.copied:
             widget = item.parentWidget
-            if isinstance(widget, PedsimAgentWidget):
+            if isinstance(widget, PedestrianAgentWidget):
                 widget.save()
-                agent = copy.deepcopy(widget.pedsimAgent)
+                agent = copy.deepcopy(widget.pedestrianAgent)
                 agent.name = self.generateName()
                 # move agent and waypoints a bit
                 agent.pos[0] += 1.0
@@ -812,7 +666,7 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
                 for wp in agent.waypoints:
                     wp[0] += 1.0
                     wp[1] += 1.0
-                new_widget = self.addPedsimAgentWidget(agent)
+                new_widget = self.addPedestrianAgentWidget(agent)
                 # select new item and waypoints
                 new_widget.graphicsPathItem.setSelected(True)
                 for w in new_widget.getWaypointWidgets():
@@ -821,27 +675,34 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
                 widget.graphicsPathItem.setSelected(False)
                 for w in widget.getWaypointWidgets():
                     w.ellipseItem.setSelected(False)
-            elif isinstance(widget, FlatlandObjectWidget):
-                widget.save()
-                obj = copy.deepcopy(widget.flatlandObject)
-                obj.name = self.generateName()
-                obj.pos[0] += 1.0
-                obj.pos[1] += 1.0
-                new_widget = self.addFlatlandObjectWidget(obj)
-                # select new item
-                new_widget.graphicsPathItem.setSelected(True)
-                # unselect old item
-                widget.graphicsPathItem.setSelected(False)
 
     def onNewScenarioClicked(self):
         pass
 
     def onOpenClicked(self):
-        initial_folder = os.path.join(arena_simulation_setup.world.World.base_dir(), "scenarios")
-        res = QtWidgets.QFileDialog.getOpenFileName(parent=self, directory=initial_folder)
-        path = res[0]
-        if path != "":
-            self.loadArenaScenario(path)
+        self.show_select_scenario_dialog()
+
+    def show_select_scenario_dialog(self):
+        dialog = ComboBoxDialog(
+            self, 
+            combo_box_items=arena_simulation_setup.world.World(self.selected_world).scenario.list(),
+            window_title="Choose scenario",
+            label="Please select a scenario:"
+        )
+        result = dialog.exec_()  # Modal dialog, execution pauses here
+
+        if result == QtWidgets.QDialog.Accepted:
+            selected_scenario = dialog.get_selected_option()
+            print(f"User selected: {selected_scenario}")
+            self.statusBar().showMessage(f"Selected: {selected_scenario}")
+
+            self.selected_scenario = selected_scenario
+
+            path = pathlib.Path(arena_simulation_setup.world.World(self.selected_world).base_dir()) / os.path.join("scenarios", self.selected_scenario)
+            if path.is_file():
+                self.loadArenaScenario(str(path))
+        else:
+            print("Dialog was rejected or closed unexpectedly.")
 
     def onSaveClicked(self):
         if not self.save():
@@ -849,12 +710,30 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
             self.onSaveAsClicked()
 
     def onSaveAsClicked(self) -> bool:
-        initial_folder = os.path.join(arena_simulation_setup.world.World.base_dir(), "scenarios")
+        # initial_folder = os.path.join(arena_simulation_setup.world.World(self.selected_world).base_dir(), "scenarios")
 
-        res = QtWidgets.QFileDialog.getSaveFileName(parent=self, directory=initial_folder)
-        path = res[0]
-        if path != "":
-            return self.save(path)
+        # res = QtWidgets.QFileDialog.getSaveFileName(parent=self, directory=initial_folder)
+        # path = res[0]
+        dialog = LineEditDialog(
+            self, 
+            window_title="Save scenario",
+            label="Please type a name for your new scenario:",
+            placeholder_text="new_scenario.json"
+        )
+        result = dialog.exec_()  # Modal dialog, execution pauses here
+
+        if result == QtWidgets.QDialog.Accepted:
+            scenario_name = dialog.get_typed_text()
+
+            if scenario_name != "":
+                path = pathlib.Path(arena_simulation_setup.world.World(self.selected_world).scenario.base_dir()) / \
+                        os.path.join(
+                            scenario_name
+                        )
+                self.statusBar().showMessage(f"Saved at: {str(path)}")
+                return self.save(str(path))
+        else:
+            print("Dialog was rejected or closed unexpectedly.")
 
         return False
 
@@ -876,21 +755,15 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
         return False
 
     def updateWidgetsFromArenaScenario(self):
-        # pedsim agents
-        # remove all pedsim widgets
-        for w in self.getPedsimAgentWidgets():
+        # pedestrian agents
+        # remove all pedestrian widgets
+        for w in self.getPedestrianAgentWidgets():
             w.remove()
-        # create new pedsim widgets
-        for agent in self.arenaScenario.pedsimAgents:
-            self.addPedsimAgentWidget(agent)
+        # create new pedestrian widgets
+        for agent in self.arenaScenario.pedestrianAgents:
+            self.addPedestrianAgentWidget(agent)
 
         # static obstacles
-        # remove all flatland object widgets
-        for w in self.getFlatlandObjectWidgets():
-            w.remove()
-        # create new flatland object widgets
-        for obstacle in self.arenaScenario.staticObstacles:
-            self.addFlatlandObjectWidget(obstacle)
 
         # interactive obstacles
         # TODO
@@ -918,15 +791,12 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
         # save path
         self.arenaScenario.path = self.currentSavePath
 
-        # save pedsim agents
-        for w in self.getPedsimAgentWidgets():
-            w.save()  # save all data from widget(s) into pedsim agent
-            self.arenaScenario.pedsimAgents.append(w.pedsimAgent)  # add pedsim agent
+        # save pedestrian agents
+        for w in self.getPedestrianAgentWidgets():
+            w.save()  # save all data from widget(s) into pedestrian agent
+            self.arenaScenario.pedestrianAgents.append(w.pedestrianAgent)  # add pedestrian agent
 
         # save static obstacles
-        for w in self.getFlatlandObjectWidgets():
-            w.save()  # save all data from widget(s) into flatland object
-            self.arenaScenario.staticObstacles.append(w.flatlandObject)  # add flatland object
 
         # save map path
         if self.mapData is not None:

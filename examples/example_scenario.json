@@ -1,5 +1,5 @@
 {
-    "pedsim_agents": [
+    "pedestrian_agents": [
         {
             "name": "Ped 0",
             "id": 0,

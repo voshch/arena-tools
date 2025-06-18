@@ -13,14 +13,15 @@ setup(
     ],
     install_requires=[
         'setuptools',
-        'lxml'
+        'lxml',
+        'arena_simulation_setup'
     ],
     zip_safe=True,
     maintainer='voshch',
     maintainer_email='dev@voshch.dev',
     description='TODO: Package description',
     license='MIT',
-    tests_require=['pytest'],
+    # tests_require=['pytest'],
     entry_points={
         'console_scripts': [
             'zones_editor = arena_tools.ZonesEditor.__main__:main',
