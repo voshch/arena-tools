@@ -1,7 +1,6 @@
 # arena-tools
 A collection of tools to make working with [Arena-Rosnav](https://github.com/ignc-research/arena-rosnav/) and [Arena-Rosnav-3D](https://github.com/ignc-research/arena-rosnav-3D/) easier. It currently includes:
 - [Scenario Editor](#scenario-editor)
-- [Flatland Model Editor](#flatland-model-editor)
 - [Map Generator (2D)](#map-generator)
 
 ## Prerequisites
@@ -79,60 +78,11 @@ Click on Elements->Set Map. Select a `map.yaml` file in the format of a typical 
 ### Set Robot initial position and goal
 Robot position and goal is always part of a scenario.
 
-### Add Pedsim Agents
+### Add Pedestrian Agents
 
 https://user-images.githubusercontent.com/74921738/126493822-88e94f7b-3595-4cce-93cd-df3a8a664607.mov
 
 
-- Click on Elements->Add Pedsim Agent. An agent widget will be added on the left and the default Flatland Model for Pedsim Agents will be added to the scene.
-- Open the Pedsim Agent Editor by clicking on Edit or double click the model in the scene. Here you can set the Flatland Model, type and all other attributes of your agent.
+- Click on Elements->Add Pedestrian Agent. An agent widget will be added on the left and the default Model for Pedestrian Agents will be added to the scene.
+- Open the Pedestrian Agent Editor by clicking on Edit or double click the model in the scene. Here you can set the Model, type and all other attributes of your agent.
 - Click on 'Add Waypoints...' or select an agent and press CTRL+D to enter Waypoint Mode. Click anywhere in the scene to add a waypoint for this agent. Press ESC or click OK when finished.
-
-
-### Add Flatland Object (Static Obstacle)
-
-
-https://user-images.githubusercontent.com/74921738/126516348-d2c4ab92-fb8b-4b57-9a4f-3bdefeb9e665.mov
-
-
-
-https://user-images.githubusercontent.com/74921738/127176906-98ab58bb-9c40-4d56-b65e-049072f45a5d.mov
-
-
-- Click on Elements->Add Flatland Object. A widget will be added on the left and the default Flatland Model for objects will be added to the scene.
-- Choose a model YAML file by double clicking the item in the scene
-- Rotate object by holding CTRL while clicking on the object (keep mouse button pressed) and dragging the mouse.
-
-
-> **NOTE:** When creating scenarios for the 2D environment *arena-rosnav* there are two different ways of managing obstacles. Firstly, using *pedsim* (standart) which can be in certain conditions unreliable, or secondly using *arena*. If you intend to use *arena* you must transform your scenarios into their specific format, using the following script, [here](/utils/ped_to_arena.py)
----
-
-# Flatland Model Editor
-![](img/model_editor.png)
-
-Flatland Model Editor is a tool to create models used by Flatland. See the [Flatland Documentation](https://flatland-simulator.readthedocs.io/en/latest/core_functions/models.html) for a description of a model file. Run it using Python:
-```bash
-roscd arena-tools && python FlatlandModelEditor.py
-```
-### Load and Save Models
-Click on File->Open or File->Save.
-## Add Bodies
-Click on 'Add Body'.
-### Flatland Body Editor
-
-
-https://user-images.githubusercontent.com/74921738/126547646-d491a712-a2d7-4881-940a-81134da04555.mov
-
-
-Click on the 'edit'-Button of the Body you want to edit. The Flatland Body Editor will open. You can edit basic properties of the body and add polygon and circle footprints. You can drag the scene around using left mouse button and zoom in and out using scroll wheel.
-#### Polygon Footprints:
-- Click on 'Add Polygon' to add a polygon footprint. A Footprint widget will be added on the left.
-- Delete polygon footprint by clicking on delete.
-- Edit the layers by writing them in the layers edit box. Layer names need to be separated by commas (e.g. like this: "layer1, layer2, layer3").
-- Increase or decrease the number of vertices by clicking on + or -.
-- Set position of the footprint by dragging it around in the scene.
-- Set position of each vertice by holding the mouse near the vertice (cursor should change) and dragging the vertice.
-- Duplicate footprint by selecting it in the scene and then pressing SHIFT + D
-- Save body by clicking 'Save and Close'
-### Circle Footprints
-Not yet implemented.

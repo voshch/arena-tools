@@ -8,9 +8,9 @@ from ..utils.HelperFunctions import *
 
 class ArenaScenario:
     def __init__(self):
-        self.pedsimAgents = []  # list of PedsimAgent objects
+        self.pedestrianAgents = []  # list of PedestrianAgent objects
         self.interactiveObstacles = []  # list of InteractiveObstacle messages
-        self.staticObstacles = []  # list of FlatlandObjects
+        self.staticObstacles = []  # list of 
         self.robotPosition = np.zeros(2)  # starting position of robot
         self.robotGoal = np.zeros(2)  # robot goal
         self.mapPath = ""  # path to map file
@@ -20,13 +20,12 @@ class ArenaScenario:
     def toDict(self):
         d = {}
 
-        d["pedsim_agents"] = [a.toDict() for a in self.pedsimAgents]
+        d["pedestrian_agents"] = [a.toDict() for a in self.pedestrianAgents]
         d["static_obstacles"] = [o.toDict() for o in self.staticObstacles]
         # d["interactive_obstacles"] = TODO...
         d["robot_position"] = [float(value) for value in self.robotPosition]
         d["robot_goal"] = [float(value) for value in self.robotGoal]
         d["resets"] = self.resets
-        d["map_path"] = delete_map_path_prefix(self.mapPath)
         d["format"] = "arena-tools"
 
         return d
@@ -38,15 +37,12 @@ class ArenaScenario:
         return scenario
 
     def loadFromDict(self, d: dict):
-        self.pedsimAgents = [Pedestrian.fromDict(
-            a) for a in d["pedsim_agents"]]
-        self.staticObstacles = [FlatlandObject.fromDict(
-            o) for o in d["static_obstacles"]]
+        self.pedestrianAgents = [Pedestrian.fromDict(
+            a) for a in d["pedestrian_agents"]]
         # self.interactiveObstacles = ...TODO
         self.robotPosition = np.array(
             [d["robot_position"][0], d["robot_position"][1]])
         self.robotGoal = np.array([d["robot_goal"][0], d["robot_goal"][1]])
-        self.mapPath = add_map_path_prefix(d["map_path"])
         if ("resets") in d.keys():
             self.resets = d["resets"]
         else:

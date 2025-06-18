@@ -1,4 +1,4 @@
-"""This file converts arena-scenarios, created in the pedsim-format, into the scenario format, originally used by arena-rosnav
+"""This file converts arena-scenarios, created in the pedestrian-format, into the scenario format, originally used by arena-rosnav
 """
 
 import json
@@ -23,7 +23,7 @@ for path_to_json_file in filenames:
     obs_list = []
     dynamic_obstacles = {}
     watchers = {}
-    for i, agent in enumerate(json_ped['pedsim_agents']):
+    for i, agent in enumerate(json_ped['pedestrian_agents']):
         # transforom obs
         obs = {}
         obs['obstacle_radius'] = 0.3

@@ -3,18 +3,18 @@ from enum import Enum
 from arena_tools.utils.HelperFunctions import *
 
 
-class PedsimStartupMode(Enum):
+class PedestrianStartupMode(Enum):
     DEFAULT = 0
     WAIT_TIMER = 1
     TRIGGER_ZONE = 2
 
 
-class PedsimWaypointMode(Enum):
+class PedestrianWaypointMode(Enum):
     LOOP = 0
     RANDOM = 1
 
 
-class PedsimAgentType(Enum):
+class PedestrianAgentType(Enum):
     ADULT = 0
     CHILD = 1
     ELDER = 2
@@ -26,7 +26,7 @@ class InteractiveObstacleType(Enum):
     SHELF = 0
 
 
-class PedsimInteractiveObstacle:
+class PedestrianInteractiveObstacle:
     def __init__(self):
         self.obstacleType = InteractiveObstacleType.SHELF
         #   TODO...
@@ -36,10 +36,11 @@ class Pedestrian:
     def __init__(self, name) -> None:
         self.name = name
 
-        # set default values (derived from pedsim_msgs/Ped.msg)
+        # set default values (derived from pedestrian_msgs/Ped.msg)
         self.id = 0
         self.pos = np.zeros(2)
         self.type = "adult"
+        self.model = "actor1"
         self.yaml_file = ""
         self.number_of_peds = 1
         self.vmax = 0.3
@@ -86,6 +87,8 @@ class Pedestrian:
         if not np.allclose(self.pos, other.pos):
             return False
         if self.type != other.type:
+            return False
+        if self.model != other.model:
             return False
         if self.yaml_file != other.yaml_file:
             return False
@@ -172,6 +175,7 @@ class Pedestrian:
         d["id"] = self.id
         d["pos"] = [float(val) for val in self.pos]
         d["type"] = self.type
+        d["model"] = self.model
         d["yaml_file"] = self.yaml_file
         d["number_of_peds"] = self.number_of_peds
         d["vmax"] = self.vmax
@@ -217,6 +221,7 @@ class Pedestrian:
         a.id = d["id"]
         a.pos = np.array([d["pos"][0], d["pos"][1]])
         a.type = d["type"]
+        a.model = d["model"]
         a.number_of_peds = d["number_of_peds"]
         a.vmax = d["vmax"]
 
@@ -254,7 +259,7 @@ class Pedestrian:
 
     def getPedMsg(self):
         try:
-            from pedsim_msgs.msg import Ped
+            from pedestrian_msgs.msg import Ped
             from geometry_msgs.msg import Point
         except BaseException:
             return None
