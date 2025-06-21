@@ -381,6 +381,10 @@ class RobotAgentWidget(QtWidgets.QFrame):
         # add to scene
         self.graphicsScene.addItem(self.goalGraphicsEllipseItem)
 
+        # arrow connect the robot to its goal
+        self.arrowItem = ArenaArrowItem(self.startGraphicsEllipseItem, self.goalGraphicsEllipseItem)
+        self.graphicsScene.addItem(self.arrowItem)
+
         # move start and goal positions a bit to make them not overlap
         self.startXSpinBox.setValue(-3)
         self.startYSpinBox.setValue(3)
@@ -444,6 +448,7 @@ class RobotAgentWidget(QtWidgets.QFrame):
             y = self.goalYSpinBox.value()
             self.goalGraphicsEllipseItem.setPosNoEvent(x, y)
 
+        self.arrowItem.updatePosition()
 
 class ArenaScenarioEditor(QtWidgets.QMainWindow):
     def __init__(self, **kwargs):
