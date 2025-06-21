@@ -504,6 +504,8 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
         central_widget = QtWidgets.QWidget()
         central_widget.setLayout(QtWidgets.QGridLayout())
         self.setCentralWidget(central_widget)
+        splitter = QtWidgets.QSplitter()
+        splitter.setOrientation(QtCore.Qt.Orientation.Horizontal)
 
         # menu bar
         menubar = self.menuBar()
@@ -525,7 +527,6 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
         drawing_frame = QtWidgets.QFrame()
         drawing_frame.setLayout(QtWidgets.QVBoxLayout())
         drawing_frame.setFrameStyle(QtWidgets.QFrame.Shape.Box | QtWidgets.QFrame.Shadow.Raised)
-        self.centralWidget().layout().addWidget(drawing_frame, 0, 1, -1, -1)
         # graphicsscene
         self.gscene = ArenaQGraphicsScene()
         # graphicsview
@@ -538,7 +539,6 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
         self.obstacles_scrollarea = QtWidgets.QScrollArea(self)
         self.obstacles_scrollarea.setWidgetResizable(True)
         self.obstacles_scrollarea.setMinimumWidth(300)
-        self.centralWidget().layout().addWidget(self.obstacles_scrollarea, 0, 0, -1, 1)
         # frame
         self.obstacles_frame = QtWidgets.QFrame()
         self.obstacles_frame.setLayout(QtWidgets.QVBoxLayout())
@@ -548,6 +548,10 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
         # always add robot agent
         self.robotAgentWidget = RobotAgentWidget(self.gscene, self.gview)
         self.obstacles_frame.layout().addWidget(self.robotAgentWidget)
+
+        splitter.addWidget(self.obstacles_scrollarea)
+        splitter.addWidget(drawing_frame)
+        self.centralWidget().layout().addWidget(splitter)
 
     def onPedestrianAgentsGlobalConfigClicked(self):
         self.pedestrianAgentsGlobalConfigWidget.show()
