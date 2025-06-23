@@ -227,6 +227,11 @@ class ArenaGraphicsEllipseItem(QtWidgets.QGraphicsEllipseItem):
                 self.xSpinBox.setValue(self.pos().x())
                 self.ySpinBox.setValue(self.pos().y())
 
+            # update the arrow position if arrow exists in parent
+            for item in self.scene().items():
+                if isinstance(item, ArenaArrowItem):
+                    item.updatePosition()
+
         return super().itemChange(change, value)
 
     def mousePressEvent(self, mouse_event):
@@ -506,6 +511,44 @@ class ArenaQGraphicsPolygonItem(QtWidgets.QGraphicsPolygonItem):
             self.setCursor(QtCore.Qt.CursorShape.SizeAllCursor)
 
         return super().hoverMoveEvent(move_event)
+
+
+class ArenaArrowItem(QtWidgets.QGraphicsPathItem):
+    def __init__(self, startItem, endItem, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.startItem = startItem
+        self.endItem = endItem
+
+        # Arrow styling
+        pen = QtGui.QPen(QtCore.Qt.GlobalColor.black)
+        pen.setWidthF(0.05)
+        self.setPen(pen)
+
+        self.updatePosition()
+
+    def updatePosition(self):
+        start = self.startItem.scenePos()
+        end = self.endItem.scenePos()
+
+        path = QtGui.QPainterPath()
+        path.moveTo(start)
+        path.lineTo(end)
+
+        # Arrowhead
+        line = QtCore.QLineF(start, end)
+        angle_rad = np.deg2rad(-line.angle())  # Convert to radians, correct direction
+
+        arrow_size = 0.5
+        p1 = end + QtCore.QPointF(np.cos(angle_rad + np.pi / 6) * -arrow_size,
+                                np.sin(angle_rad + np.pi / 6) * -arrow_size)
+        p2 = end + QtCore.QPointF(np.cos(angle_rad - np.pi / 6) * -arrow_size,
+                                np.sin(angle_rad - np.pi / 6) * -arrow_size)
+
+        path.moveTo(p1)
+        path.lineTo(end)
+        path.lineTo(p2)
+
+        self.setPath(path)
 
 
 class ModeWindow(QtWidgets.QMessageBox):
@@ -836,9 +879,11 @@ class ComboBoxDialog(QtWidgets.QDialog):
         self.combo_box.addItems(combo_box_items)
         layout.addWidget(self.combo_box)
 
+        self.button_layout = QtWidgets.QHBoxLayout()
         self.confirm_button = QtWidgets.QPushButton("Confirm")
         self.confirm_button.clicked.connect(self.accept)  # Closes dialog and returns result = Accepted
-        layout.addWidget(self.confirm_button)
+        self.button_layout.addWidget(self.confirm_button)
+        layout.addLayout(self.button_layout)
 
         self.setModal(True)  # Makes it block interaction with the parent window
         # self.setFixedSize(300, 150)
