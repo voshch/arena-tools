@@ -1,26 +1,26 @@
 from PyQt5 import QtGui, QtCore, QtWidgets
 import os
 import copy
+import arena_simulation_setup.entities.robot
 from arena_tools.ScenarioEditor.ArenaScenario import *
 from arena_tools.utils.QtExtensions import *
 from arena_tools.utils.HelperFunctions import *
-from .Pedestrian import PedestrianAgentType, PedestrianWaypointMode, PedestrianStartupMode
 
 import arena_simulation_setup.entities.obstacles.dynamic
 
 
-class PedestrianAgentEditor(QtWidgets.QWidget):
+class RobotAgentEditor(QtWidgets.QWidget):
     editorSaved = QtCore.pyqtSignal()
 
-    def __init__(self, pedestrianAgentWidget=None, **kwargs):
+    def __init__(self, robotAgentWidget=None, **kwargs):
         super().__init__(**kwargs)
-        self.pedestrianAgentWidget = pedestrianAgentWidget
-        if pedestrianAgentWidget is None:
-            self.pedestrianAgent = Pedestrian('Pedestrian 1')
+        self.robotAgentWidget = robotAgentWidget
+        if robotAgentWidget is None:
+            self.robotAgent = Pedestrian('Pedestrian 1')
         else:
-            self.pedestrianAgent = pedestrianAgentWidget.pedestrianAgent
+            self.robotAgent = robotAgentWidget.robotAgent
         self.setup_ui()
-        self.updateValuesFromPedestrianAgent()
+        self.updateValuesFromRobotAgent()
 
     def setup_ui(self):
         self.setWindowTitle("Pedestrian Agent Editor")
@@ -57,24 +57,10 @@ class PedestrianAgentEditor(QtWidgets.QWidget):
         self.nameLabel.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.scrollAreaFrame.layout().addWidget(self.nameLabel, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
         # editbox
-        name = self.pedestrianAgentWidget.name_label.text() if self.pedestrianAgentWidget is not None else "global agent"
+        name = self.robotAgentWidget.name_label.text() if self.robotAgentWidget is not None else "global agent"
         self.name_edit = QtWidgets.QLineEdit(name)
         self.name_edit.setFixedSize(200, 30)
         self.scrollAreaFrame.layout().addWidget(self.name_edit, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
-        vertical_idx += 1
-
-        # type
-        # label
-        type_label = QtWidgets.QLabel("Type")
-        type_label.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
-        self.scrollAreaFrame.layout().addWidget(type_label, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        # dropdown
-        self.typeComboBox = QtWidgets.QComboBox()
-        for agent_type in PedestrianAgentType:
-            self.typeComboBox.insertItem(agent_type.value, agent_type.name.lower())
-        self.typeComboBox.setFixedSize(200, 30)
-        self.typeComboBox.currentIndexChanged.connect(self.updateWidgetsFromSelectedType)
-        self.scrollAreaFrame.layout().addWidget(self.typeComboBox, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
 
         # model
@@ -84,49 +70,44 @@ class PedestrianAgentEditor(QtWidgets.QWidget):
         self.scrollAreaFrame.layout().addWidget(model_label, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
         # dropdown
         self.modelComboBox = QtWidgets.QComboBox()
-        for index, agent_model in enumerate(arena_simulation_setup.entities.obstacles.dynamic.DynamicObstacle.list()):
+        for index, agent_model in enumerate(arena_simulation_setup.entities.robot.Robot.list()):
             self.modelComboBox.insertItem(index, agent_model)
         self.modelComboBox.setFixedSize(200, 30)
         self.modelComboBox.currentIndexChanged.connect(self.updateWidgetsFromSelectedModel)
         self.scrollAreaFrame.layout().addWidget(self.modelComboBox, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
 
+
         # save button
         self.save_button = QtWidgets.QPushButton("Save and Close")
         self.save_button.clicked.connect(self.onSaveClicked)
         self.layout().addWidget(self.save_button, 1, 0, -1, -1)
 
-    def updateWidgetsFromSelectedType(self):
-        ...
-
-    def updateValuesFromPedestrianAgent(self):
-        self.typeComboBox.setCurrentIndex(PedestrianAgentType[self.pedestrianAgent.type.upper()].value)
-        self.modelComboBox.setCurrentText(self.pedestrianAgent.model)
-
-        self.name_edit.setText(self.pedestrianAgent.name)
+    def updateValuesFromRobotAgent(self):
+        self.modelComboBox.setCurrentText(self.robotAgent.model)
+        self.name_edit.setText(self.robotAgent.name)
 
     def updateWidgetsFromSelectedModel(self):
         ...
 
     def show(self):
-        self.updateValuesFromPedestrianAgent()
+        self.updateValuesFromRobotAgent()
         return super().show()
 
-    def updatePedestrianAgentFromWidgets(self, agent: Pedestrian):
-        agent.type = PedestrianAgentType(self.typeComboBox.currentIndex()).name.lower()
+    def updateRobotAgentFromWidgets(self, agent: Pedestrian):
         agent.model = self.modelComboBox.currentText()
         agent.name = self.name_edit.text()
 
     def onSaveClicked(self):
-        self.updatePedestrianAgentFromWidgets(self.pedestrianAgent)
+        self.updateRobotAgentFromWidgets(self.robotAgent)
         self.hide()
         self.editorSaved.emit()
 
     def closeEvent(self, event):
         # check if any changes have been made
-        current_agent = copy.deepcopy(self.pedestrianAgent)
-        self.updatePedestrianAgentFromWidgets(current_agent)
-        if self.pedestrianAgent != current_agent:
+        current_agent = copy.deepcopy(self.robotAgent)
+        self.updateRobotAgentFromWidgets(current_agent)
+        if self.robotAgent != current_agent:
             # ask user if changes should be saved
             msg_box = QtWidgets.QMessageBox()
             msg_box.setText("Do you want to save changes to this agent?")
@@ -137,21 +118,6 @@ class PedestrianAgentEditor(QtWidgets.QWidget):
                 self.onSaveClicked()
             elif ret == QtWidgets.QMessageBox.Discard:
                 # reset to values already saved
-                self.updateValuesFromPedestrianAgent()
+                self.updateValuesFromRobotAgent()
             elif ret == QtWidgets.QMessageBox.Cancel:
                 event.ignore()
-
-
-class PedestrianAgentEditorGlobalConfig(PedestrianAgentEditor):
-    """
-    A Pedestrian Agent Editor excluding widgets that shouldn't be globally configured
-    and without a parent PedestrianAgentWidget.
-    """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    def setup_ui(self):
-        super().setup_ui()
-        self.nameLabel.hide()
-        self.name_edit.hide()
