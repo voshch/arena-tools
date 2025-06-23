@@ -601,6 +601,7 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
         # menu bar
         menubar = self.menuBar()
         file_menu = menubar.addMenu("File")
+        file_menu.addAction("New", self.onNewScenarioClicked, "Ctrl+N")
         file_menu.addAction("Open...", self.onOpenClicked, "Ctrl+O")
         file_menu.addAction("Save", self.onSaveClicked, "Ctrl+S")
         file_menu.addAction("Save As...", self.onSaveAsClicked, "Ctrl+Shift+S")
@@ -815,15 +816,37 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
         pass
 
     def onOpenClicked(self):
-        self.show_select_scenario_dialog()
+        self.show_select_scenario_dialog(initialize=False)
 
-    def show_select_scenario_dialog(self):
+    def onNewScenarioClicked(self):
+        self.selected_scenario = ""
+        self.currentSavePath = ""
+        self.arenaScenario = ArenaScenario()
+        self.updateWidgetsFromArenaScenario()
+
+    def show_select_scenario_dialog(self, initialize=True):
         dialog = ComboBoxDialog(
             self, 
             combo_box_items=arena_simulation_setup.world.World(self.selected_world).scenario.list(),
             window_title="Choose scenario",
             label="Please select a scenario:"
         )
+
+        if initialize:
+            new_scenario_button = QtWidgets.QPushButton("New scenario")
+            dialog.button_layout.addWidget(new_scenario_button)
+            # Track if new_scenario_button button was clicked
+            new_scenario_clicked = False
+
+            def handleNewScenarioButton():
+                nonlocal new_scenario_clicked
+                new_scenario_clicked = True
+                dialog.reject()  # Close the dialog without Accepting
+
+            new_scenario_button.clicked.connect(handleNewScenarioButton)
+        else:
+            dialog.combo_box.setCurrentText(self.selected_scenario)
+
         result = dialog.exec_()  # Modal dialog, execution pauses here
 
         if result == QtWidgets.QDialog.Accepted:
@@ -835,6 +858,9 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
             path = pathlib.Path(arena_simulation_setup.world.World(self.selected_world).scenario.base_dir()) / os.path.join(self.selected_scenario)
             if path.is_file():
                 self.loadArenaScenario(str(path))
+        elif initialize:
+            if new_scenario_clicked:
+                self.onNewScenarioClicked()
         else:
             print("Dialog was rejected or closed unexpectedly.")
 
@@ -860,8 +886,19 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
                         os.path.join(
                             scenario_name
                         )
-                self.statusBar().showMessage(f"Saved at: {str(path)}")
-                return self.save(str(path))
+                
+                if path.is_file(): # File already exist
+                    msg_box = QtWidgets.QMessageBox()
+                    msg_box.setText(f"The file {scenario_name} already exist, do you want to override it?")
+                    msg_box.setStandardButtons(QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Cancel)
+                    msg_box.setDefaultButton(QtWidgets.QMessageBox.Save)
+                    ret = msg_box.exec()
+                    if ret == QtWidgets.QMessageBox.Save:
+                        self.statusBar().showMessage(f"Saved at: {str(path)}")
+                        return self.save(str(path))
+                    elif ret == QtWidgets.QMessageBox.Cancel:
+                        self.statusBar().showMessage("Canceled save!")
+                        
         else:
             print("Dialog was rejected or closed unexpectedly.")
 

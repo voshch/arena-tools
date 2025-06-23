@@ -879,9 +879,11 @@ class ComboBoxDialog(QtWidgets.QDialog):
         self.combo_box.addItems(combo_box_items)
         layout.addWidget(self.combo_box)
 
+        self.button_layout = QtWidgets.QHBoxLayout()
         self.confirm_button = QtWidgets.QPushButton("Confirm")
         self.confirm_button.clicked.connect(self.accept)  # Closes dialog and returns result = Accepted
-        layout.addWidget(self.confirm_button)
+        self.button_layout.addWidget(self.confirm_button)
+        layout.addLayout(self.button_layout)
 
         self.setModal(True)  # Makes it block interaction with the parent window
         # self.setFixedSize(300, 150)
