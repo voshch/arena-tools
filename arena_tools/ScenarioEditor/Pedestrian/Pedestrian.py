@@ -1,5 +1,6 @@
 import numpy as np
 from enum import Enum
+from typing import Optional
 from arena_tools.utils.HelperFunctions import *
 
 
@@ -41,6 +42,7 @@ class Pedestrian:
         self.pos = np.zeros(3)
         self.type = "adult"
         self.model = "actor1"
+        self.custom_properties:list[dict] = []
 
         self.waypoints = []  # list of 2D numpy arrays
 
@@ -65,6 +67,11 @@ class Pedestrian:
             [np.allclose(wpa, wpb) for wpa, wpb in zip(self.waypoints, other.waypoints)]
         ):
             return False
+            
+        custom_properties_fset = set(frozenset(d.items()) for d in self.custom_properties)
+        other_custom_properties_fset = set(frozenset(d.items()) for d in other.custom_properties)
+        if custom_properties_fset != other_custom_properties_fset:
+            return False
 
         return True
 
@@ -78,6 +85,11 @@ class Pedestrian:
         d["type"] = self.type
         d["model"] = self.model
         d["waypoints"] = [[float(val) for val in wp] for wp in self.waypoints]
+        if len(self.custom_properties) > 0:
+            for property in self.custom_properties:
+                property_name = list(property.keys())[0]
+                value = property.get(property_name)
+                d[property_name] = value
 
         return d
 
@@ -90,14 +102,44 @@ class Pedestrian:
 
         if d.get("type"):
             a.type = d["type"]
-        if d.get("mode"):
+        if d.get("model"):
             a.model = d["model"]
         if d.get("id"):
             a.id = d["id"]
         a.pos = np.array(d["pos"])
         a.waypoints = [np.array(wp) for wp in d["waypoints"]]
 
+        for property_name in list(d.keys()):
+            if property_name not in ["name", "type", "model", "id", "pos", "waypoints"]:
+                property_value = d.get(property_name)
+                a.addCustomProperty(property_name, property_value)
+
         return a
+    
+    def addCustomProperty(self, key, value):
+        self.custom_properties.append({key:value})
+
+    def editCustomProperty(self, key, new_key:Optional[None]=None, new_value:Optional[None]=None):
+        if new_key:
+            for property in self.custom_properties:
+                if list(property.keys())[0] == key:
+                    property = {new_key:property.get(key)}
+                    break
+            if new_value:
+                raise NotImplementedError
+            
+        if new_value:
+            for property in self.custom_properties:
+                if list(property.keys())[0] == key:
+                    property = {key:new_value}
+            if new_key:
+                raise NotImplementedError
+
+    def removeCustomProperty(self, key):
+        for idx, property in enumerate(self.custom_properties):
+            if list(property.keys())[0] == key:
+                self.custom_properties.pop(idx)
+                break
 
     def getPedMsg(self):
         try:

@@ -1,6 +1,7 @@
 from PyQt5 import QtGui, QtCore, QtWidgets
 import numpy as np
 from arena_tools.utils.HelperFunctions import *
+from typing import Optional
 
 
 class KeyPressEater(QtCore.QObject):
@@ -932,3 +933,79 @@ class LineEditDialog(QtWidgets.QDialog):
 
     def get_typed_text(self):
         return self.line_edit.text()
+    
+class CustomPropertyWidget(QtWidgets.QWidget):
+    def __init__(self, pedestrianAgentEditor, property_name:Optional[str]="", property_value:Optional[str]="", property_type:Optional[str]="str", **kwargs):
+        super().__init__(**kwargs)
+        from ..ScenarioEditor.ArenaScenarioEditor import PedestrianAgentWidget
+        from ..ScenarioEditor.Pedestrian.PedestrianEditor import PedestrianAgentEditor
+        self.id = 0
+        self.pedestrianAgentEditor:PedestrianAgentEditor = pedestrianAgentEditor
+        self.property_name = property_name
+        self.property_value = property_value
+        self.property_type = property_type
+
+        # setup widgets
+        self.setup_ui()
+
+    def setup_ui(self):
+        self.setLayout(QtWidgets.QHBoxLayout())
+        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Maximum, QtWidgets.QSizePolicy.Policy.Maximum)
+
+        # property name
+        # label
+        key_label = QtWidgets.QLabel("Key")
+        self.layout().addWidget(key_label)
+        # editbox
+        self.property_name_edit = QtWidgets.QLineEdit(str(self.property_name))
+        self.property_name_edit.setPlaceholderText("Property key")
+        if self.property_name != "":
+            self.property_name_edit.setText(str(self.property_name))
+        self.property_name_edit.textEdited.connect(self.onCustomPropertyNameEdited)
+        self.layout().addWidget(self.property_name_edit)
+
+        # property value
+        # label
+        value_label = QtWidgets.QLabel("Value")
+        self.layout().addWidget(value_label)
+        # editbox
+        self.property_value_edit = QtWidgets.QLineEdit(str(self.property_value))
+        self.property_value_edit.setPlaceholderText("Property value")
+        if self.property_value != "":
+            self.property_value_edit.setText(str(self.property_value))
+        self.property_value_edit.textEdited.connect(self.onCustomPropertyValueEdited)
+        self.layout().addWidget(self.property_value_edit)
+
+        # property value type
+        # label
+        type_label = QtWidgets.QLabel("Type")
+        self.layout().addWidget(type_label)
+        # combobox
+        self.type_combobox = QtWidgets.QComboBox()
+        for idx, t in enumerate(["int", "float", "str"]):
+            self.type_combobox.insertItem(idx, t)
+        self.type_combobox.setCurrentText(self.property_type)
+        self.layout().addWidget(self.type_combobox)
+
+        # delete button
+        delete_button = QtWidgets.QPushButton("X")
+        delete_button.setFixedWidth(30)
+        delete_button.setStyleSheet("background-color: red")
+        delete_button.clicked.connect(self.remove)
+        self.layout().addWidget(delete_button)
+
+    def onCustomPropertyNameEdited(self):
+        self.property_name = self.property_name_edit.text()
+
+
+    def onCustomPropertyValueEdited(self):
+        self.property_value = self.property_value_edit.text()
+
+    def remove(self):
+        # self.ellipseItem.scene().removeItem(self.ellipseItem)
+        # del self.ellipseItem.keyPressEater  # delete to remove event filter
+
+        self.pedestrianAgentEditor.removeCustomProperty(self)
+        # self.pedestrianAgentWidget.updateWaypointIdLabels()
+        # self.pedestrianAgentWidget.drawWaypointPath()
+        self.deleteLater()
