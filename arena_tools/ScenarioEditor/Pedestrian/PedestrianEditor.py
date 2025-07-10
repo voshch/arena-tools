@@ -144,7 +144,6 @@ class PedestrianAgentEditor(QtWidgets.QWidget):
                     # item.widget().deleteLater()
         
         if len (self.custom_properties) > 0:
-            print("Custom properties:",self.custom_properties)
             for property in self.custom_properties:
                 # name editbox
                 property_name = list(property.keys())[0]

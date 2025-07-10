@@ -549,25 +549,38 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
         self.lastPedestrianNameId = 0
         self.lastRobotNameId = 0
 
-        self.selected_world = "map_empty"
-        path = pathlib.Path(arena_simulation_setup.world.World(self.selected_world).map.path) / "map.yaml"
-        if path.is_file():
-            self.setMap(str(path))
+        self.selected_world = ""
         self.selected_scenario = ""
 
         # create global pedestrian settings widget
         self.pedestrianAgentsGlobalConfigWidget = PedestrianAgentEditorGlobalConfig()
         self.pedestrianAgentsGlobalConfigWidget.editorSaved.connect(self.onPedestrianAgentsGlobalConfigChanged)
 
-        QtCore.QTimer.singleShot(0, self.show_select_world_dialog)
+        QtCore.QTimer.singleShot(0, lambda: self.show_select_world_dialog(initialize=True))
 
-    def show_select_world_dialog(self):
+    def show_select_world_dialog(self, initialize=True):
         dialog = ComboBoxDialog(
             self, 
             combo_box_items=arena_simulation_setup.world.World.list(),
             window_title="Choose world",
             label="Please select a world:"
         )
+
+        if initialize:
+            cancel_button = QtWidgets.QPushButton("Cancel")
+            dialog.button_layout.addWidget(cancel_button)
+            # Track if cancel_button was clicked
+            cancel_button_clicked = False
+
+            def handleCancelButton():
+                nonlocal cancel_button_clicked
+                cancel_button_clicked = True
+                dialog.reject()  # Close the dialog without Accepting
+            
+            cancel_button.clicked.connect(handleCancelButton)
+        else:
+            dialog.combo_box.setCurrentText(self.selected_world)
+
         result = dialog.exec_()  # Modal dialog, execution pauses here
 
         if result == QtWidgets.QDialog.Accepted:
@@ -580,6 +593,9 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
                 self.setMap(str(path))
             
             self.show_select_scenario_dialog()
+        elif initialize:
+            if cancel_button_clicked:
+                self.statusBar().showMessage("Canceled world selection")
         else:
             print("Dialog was rejected or closed unexpectedly.")
 
@@ -601,12 +617,12 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
         # menu bar
         menubar = self.menuBar()
         file_menu = menubar.addMenu("File")
+        file_menu.addAction("Set World...", self.onSetMapClicked)
         file_menu.addAction("New", self.onNewScenarioClicked, "Ctrl+N")
         file_menu.addAction("Open...", self.onOpenClicked, "Ctrl+O")
         file_menu.addAction("Save", self.onSaveClicked, "Ctrl+S")
         file_menu.addAction("Save As...", self.onSaveAsClicked, "Ctrl+Shift+S")
         add_menu = menubar.addMenu("Elements")
-        add_menu.addAction("Set Map...", self.onSetMapClicked)
         add_menu.addAction("Add Robot Agent", self.onAddRobotAgentClicked, "Ctrl+1")
         add_menu.addAction("Add Pedestrian Agent", self.onAddPedestrianAgentClicked, "Ctrl+2")
         global_pedestrian_settings_menu = menubar.addMenu("Global Configs")
@@ -634,7 +650,7 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
         # scrollarea
         self.obstacles_scrollarea = QtWidgets.QScrollArea(self)
         self.obstacles_scrollarea.setWidgetResizable(True)
-        self.obstacles_scrollarea.setMinimumWidth(300)
+        self.obstacles_scrollarea.setMinimumWidth(560)
         # frame
         self.obstacles_frame = QtWidgets.QFrame()
         self.obstacles_frame.setLayout(QtWidgets.QVBoxLayout())
@@ -645,7 +661,7 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
         # scrollarea
         self.robot_scrollarea = QtWidgets.QScrollArea(self)
         self.robot_scrollarea.setWidgetResizable(True)
-        self.robot_scrollarea.setMinimumWidth(300)
+        self.robot_scrollarea.setMinimumWidth(560)
         # frame
         self.robots_frame = QtWidgets.QFrame()
         self.robots_frame.setLayout(QtWidgets.QVBoxLayout())
@@ -676,7 +692,10 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
             w.handleEditorSaved()
 
     def onSetMapClicked(self):
-        self.show_select_world_dialog()
+        if self.selected_world != "":
+            self.show_select_world_dialog(initialize=True)
+        else:
+            self.show_select_world_dialog(initialize=False)
 
     def setMap(self, path: str):
         self.mapData = RosMapData(path)

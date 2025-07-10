@@ -882,6 +882,7 @@ class ComboBoxDialog(QtWidgets.QDialog):
 
         self.button_layout = QtWidgets.QHBoxLayout()
         self.confirm_button = QtWidgets.QPushButton("Confirm")
+        self.confirm_button.setStyleSheet("background-color: green; color:white")
         self.confirm_button.clicked.connect(self.accept)  # Closes dialog and returns result = Accepted
         self.button_layout.addWidget(self.confirm_button)
         layout.addLayout(self.button_layout)
