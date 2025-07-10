@@ -1,6 +1,7 @@
 from PyQt5 import QtGui, QtCore, QtWidgets
 import numpy as np
 from arena_tools.utils.HelperFunctions import *
+from typing import Optional
 
 
 class KeyPressEater(QtCore.QObject):
@@ -226,6 +227,11 @@ class ArenaGraphicsEllipseItem(QtWidgets.QGraphicsEllipseItem):
             if self.xSpinBox is not None and self.ySpinBox is not None:
                 self.xSpinBox.setValue(self.pos().x())
                 self.ySpinBox.setValue(self.pos().y())
+
+            # update the arrow position if arrow exists in parent
+            for item in self.scene().items():
+                if isinstance(item, ArenaArrowItem):
+                    item.updatePosition()
 
         return super().itemChange(change, value)
 
@@ -506,6 +512,44 @@ class ArenaQGraphicsPolygonItem(QtWidgets.QGraphicsPolygonItem):
             self.setCursor(QtCore.Qt.CursorShape.SizeAllCursor)
 
         return super().hoverMoveEvent(move_event)
+
+
+class ArenaArrowItem(QtWidgets.QGraphicsPathItem):
+    def __init__(self, startItem, endItem, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.startItem = startItem
+        self.endItem = endItem
+
+        # Arrow styling
+        pen = QtGui.QPen(QtCore.Qt.GlobalColor.black)
+        pen.setWidthF(0.05)
+        self.setPen(pen)
+
+        self.updatePosition()
+
+    def updatePosition(self):
+        start = self.startItem.scenePos()
+        end = self.endItem.scenePos()
+
+        path = QtGui.QPainterPath()
+        path.moveTo(start)
+        path.lineTo(end)
+
+        # Arrowhead
+        line = QtCore.QLineF(start, end)
+        angle_rad = np.deg2rad(-line.angle())  # Convert to radians, correct direction
+
+        arrow_size = 0.5
+        p1 = end + QtCore.QPointF(np.cos(angle_rad + np.pi / 6) * -arrow_size,
+                                np.sin(angle_rad + np.pi / 6) * -arrow_size)
+        p2 = end + QtCore.QPointF(np.cos(angle_rad - np.pi / 6) * -arrow_size,
+                                np.sin(angle_rad - np.pi / 6) * -arrow_size)
+
+        path.moveTo(p1)
+        path.lineTo(end)
+        path.lineTo(p2)
+
+        self.setPath(path)
 
 
 class ModeWindow(QtWidgets.QMessageBox):
@@ -836,9 +880,12 @@ class ComboBoxDialog(QtWidgets.QDialog):
         self.combo_box.addItems(combo_box_items)
         layout.addWidget(self.combo_box)
 
+        self.button_layout = QtWidgets.QHBoxLayout()
         self.confirm_button = QtWidgets.QPushButton("Confirm")
+        self.confirm_button.setStyleSheet("background-color: green; color:white")
         self.confirm_button.clicked.connect(self.accept)  # Closes dialog and returns result = Accepted
-        layout.addWidget(self.confirm_button)
+        self.button_layout.addWidget(self.confirm_button)
+        layout.addLayout(self.button_layout)
 
         self.setModal(True)  # Makes it block interaction with the parent window
         # self.setFixedSize(300, 150)
@@ -887,3 +934,79 @@ class LineEditDialog(QtWidgets.QDialog):
 
     def get_typed_text(self):
         return self.line_edit.text()
+    
+class CustomPropertyWidget(QtWidgets.QWidget):
+    def __init__(self, pedestrianAgentEditor, property_name:Optional[str]="", property_value:Optional[str]="", property_type:Optional[str]="str", **kwargs):
+        super().__init__(**kwargs)
+        from ..ScenarioEditor.ArenaScenarioEditor import PedestrianAgentWidget
+        from ..ScenarioEditor.Pedestrian.PedestrianEditor import PedestrianAgentEditor
+        self.id = 0
+        self.pedestrianAgentEditor:PedestrianAgentEditor = pedestrianAgentEditor
+        self.property_name = property_name
+        self.property_value = property_value
+        self.property_type = property_type
+
+        # setup widgets
+        self.setup_ui()
+
+    def setup_ui(self):
+        self.setLayout(QtWidgets.QHBoxLayout())
+        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Maximum, QtWidgets.QSizePolicy.Policy.Maximum)
+
+        # property name
+        # label
+        key_label = QtWidgets.QLabel("Key")
+        self.layout().addWidget(key_label)
+        # editbox
+        self.property_name_edit = QtWidgets.QLineEdit(str(self.property_name))
+        self.property_name_edit.setPlaceholderText("Property key")
+        if self.property_name != "":
+            self.property_name_edit.setText(str(self.property_name))
+        self.property_name_edit.textEdited.connect(self.onCustomPropertyNameEdited)
+        self.layout().addWidget(self.property_name_edit)
+
+        # property value
+        # label
+        value_label = QtWidgets.QLabel("Value")
+        self.layout().addWidget(value_label)
+        # editbox
+        self.property_value_edit = QtWidgets.QLineEdit(str(self.property_value))
+        self.property_value_edit.setPlaceholderText("Property value")
+        if self.property_value != "":
+            self.property_value_edit.setText(str(self.property_value))
+        self.property_value_edit.textEdited.connect(self.onCustomPropertyValueEdited)
+        self.layout().addWidget(self.property_value_edit)
+
+        # property value type
+        # label
+        type_label = QtWidgets.QLabel("Type")
+        self.layout().addWidget(type_label)
+        # combobox
+        self.type_combobox = QtWidgets.QComboBox()
+        for idx, t in enumerate(["int", "float", "str"]):
+            self.type_combobox.insertItem(idx, t)
+        self.type_combobox.setCurrentText(self.property_type)
+        self.layout().addWidget(self.type_combobox)
+
+        # delete button
+        delete_button = QtWidgets.QPushButton("X")
+        delete_button.setFixedWidth(30)
+        delete_button.setStyleSheet("background-color: red")
+        delete_button.clicked.connect(self.remove)
+        self.layout().addWidget(delete_button)
+
+    def onCustomPropertyNameEdited(self):
+        self.property_name = self.property_name_edit.text()
+
+
+    def onCustomPropertyValueEdited(self):
+        self.property_value = self.property_value_edit.text()
+
+    def remove(self):
+        # self.ellipseItem.scene().removeItem(self.ellipseItem)
+        # del self.ellipseItem.keyPressEater  # delete to remove event filter
+
+        self.pedestrianAgentEditor.removeCustomProperty(self)
+        # self.pedestrianAgentWidget.updateWaypointIdLabels()
+        # self.pedestrianAgentWidget.drawWaypointPath()
+        self.deleteLater()
