@@ -42,11 +42,13 @@ class ArenaScenario:
                 a) for a in d["obstacles"]["dynamic"]]
         else:
             print("There are no dynamic obstacles in this scenario!")
+            self.pedestrianAgents = []
             # self.interactiveObstacles = ...TODO
         if d.get("robots"):
             self.robotAgents = [Robot.fromDict(a) for a in d["robots"]]
         else:
             print("There are no robots in this scenario!")
+            self.robotAgents = []
 
     def saveToFile(self, path_in: str = "") -> bool:
         '''

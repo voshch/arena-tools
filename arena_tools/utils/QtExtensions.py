@@ -863,7 +863,8 @@ class ComboBoxDialog(QtWidgets.QDialog):
             parent=None, 
             combo_box_items:list[str]=[""], 
             window_title:str="Choose",
-            label:str="Please select:"
+            label:str="Please select:",
+            cancel_option:bool=False
         ):
         super().__init__(parent)
         self.setWindowTitle(window_title)
@@ -885,6 +886,10 @@ class ComboBoxDialog(QtWidgets.QDialog):
         self.confirm_button.setStyleSheet("background-color: green; color:white")
         self.confirm_button.clicked.connect(self.accept)  # Closes dialog and returns result = Accepted
         self.button_layout.addWidget(self.confirm_button)
+        if cancel_option:
+            self.cancel_button = QtWidgets.QPushButton("Cancel")
+            self.cancel_button.clicked.connect(self.reject)  # Closes dialog and returns result = Rejected
+            self.button_layout.addWidget(self.cancel_button)
         layout.addLayout(self.button_layout)
 
         self.setModal(True)  # Makes it block interaction with the parent window
