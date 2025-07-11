@@ -563,22 +563,11 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
             self, 
             combo_box_items=arena_simulation_setup.world.World.list(),
             window_title="Choose world",
-            label="Please select a world:"
+            label="Please select a world:",
+            cancel_option=not initialize  # if initialize is True, we do not want a cancel option
         )
 
-        if initialize:
-            cancel_button = QtWidgets.QPushButton("Cancel")
-            dialog.button_layout.addWidget(cancel_button)
-            # Track if cancel_button was clicked
-            cancel_button_clicked = False
-
-            def handleCancelButton():
-                nonlocal cancel_button_clicked
-                cancel_button_clicked = True
-                dialog.reject()  # Close the dialog without Accepting
-            
-            cancel_button.clicked.connect(handleCancelButton)
-        else:
+        if not initialize:
             dialog.combo_box.setCurrentText(self.selected_world)
 
         result = dialog.exec_()  # Modal dialog, execution pauses here
@@ -593,11 +582,10 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
                 self.setMap(str(path))
             
             self.show_select_scenario_dialog()
-        elif initialize:
-            if cancel_button_clicked:
-                self.statusBar().showMessage("Canceled world selection")
+        elif result == QtWidgets.QDialog.Rejected:
+            self.statusBar().showMessage("Canceled selecting world")
         else:
-            print("Dialog was rejected or closed unexpectedly.")
+            print("Dialog was closed unexpectedly.")
 
     def setup_ui(self):
         self.setWindowTitle("Scenario Editor")
@@ -693,9 +681,9 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
 
     def onSetMapClicked(self):
         if self.selected_world != "":
-            self.show_select_world_dialog(initialize=True)
-        else:
             self.show_select_world_dialog(initialize=False)
+        else:
+            self.show_select_world_dialog(initialize=True)
 
     def setMap(self, path: str):
         self.mapData = RosMapData(path)
@@ -848,7 +836,8 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
             self, 
             combo_box_items=arena_simulation_setup.world.World(self.selected_world).scenario.list(),
             window_title="Choose scenario",
-            label="Please select a scenario:"
+            label="Please select a scenario:",
+            cancel_option=not initialize  # if initialize is True, we do not want a cancel option
         )
 
         if initialize:
@@ -877,11 +866,13 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
             path = pathlib.Path(arena_simulation_setup.world.World(self.selected_world).scenario.base_dir()) / os.path.join(self.selected_scenario)
             if path.is_file():
                 self.loadArenaScenario(str(path))
+        elif result == QtWidgets.QDialog.Rejected:
+            self.statusBar().showMessage("Canceled selecting scenario")
         elif initialize:
             if new_scenario_clicked:
                 self.onNewScenarioClicked()
         else:
-            print("Dialog was rejected or closed unexpectedly.")
+            print("Dialog was closed unexpectedly.")
 
     def onSaveClicked(self):
         if not self.save():
