@@ -1,12 +1,10 @@
 from PyQt5 import QtGui, QtCore, QtWidgets
 import os
 import copy
-import arena_simulation_setup.entities.robot
 from arena_tools.ScenarioEditor.ArenaScenario import *
 from arena_tools.utils.QtExtensions import *
 from arena_tools.utils.HelperFunctions import *
-
-import arena_simulation_setup.entities.obstacles.dynamic
+import arena_robots.Robot
 
 
 class RobotAgentEditor(QtWidgets.QWidget):
@@ -70,13 +68,12 @@ class RobotAgentEditor(QtWidgets.QWidget):
         self.scrollAreaFrame.layout().addWidget(model_label, vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
         # dropdown
         self.modelComboBox = QtWidgets.QComboBox()
-        for index, agent_model in enumerate(arena_simulation_setup.entities.robot.Robot.list()):
+        for index, agent_model in enumerate(arena_robots.Robot.RobotIdentifier.listall()):
             self.modelComboBox.insertItem(index, agent_model)
         self.modelComboBox.setFixedSize(200, 30)
         self.modelComboBox.currentIndexChanged.connect(self.updateWidgetsFromSelectedModel)
         self.scrollAreaFrame.layout().addWidget(self.modelComboBox, vertical_idx, 1, QtCore.Qt.AlignmentFlag.AlignRight)
         vertical_idx += 1
-
 
         # save button
         self.save_button = QtWidgets.QPushButton("Save and Close")

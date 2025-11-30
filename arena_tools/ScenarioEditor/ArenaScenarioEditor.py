@@ -364,7 +364,7 @@ class RobotAgentWidget(QtWidgets.QFrame):
     This is a row in the obstacles frame.
     '''
 
-    def __init__(self, id:int, robotAgentIn: Robot, graphicsScene: QtWidgets.QGraphicsScene, graphicsView: ArenaQGraphicsView, **kwargs):
+    def __init__(self, id: int, robotAgentIn: Robot, graphicsScene: QtWidgets.QGraphicsScene, graphicsView: ArenaQGraphicsView, **kwargs):
         super().__init__(**kwargs)
         self.id = id
         self.robotAgent = robotAgentIn
@@ -430,7 +430,7 @@ class RobotAgentWidget(QtWidgets.QFrame):
         self.edit_button = QtWidgets.QPushButton("Edit")
         self.edit_button.clicked.connect(self.onEditClicked)
         self.layout().addWidget(self.edit_button, 0, 1, 1, 2)
-        
+
         # delete button
         self.delete_button = QtWidgets.QPushButton("Delete")
         self.delete_button.clicked.connect(self.onDeleteClicked)
@@ -560,8 +560,8 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
 
     def show_select_world_dialog(self, initialize=True):
         dialog = ComboBoxDialog(
-            self, 
-            combo_box_items=arena_simulation_setup.world.World.list(),
+            self,
+            combo_box_items=[identifier.name for identifier in arena_simulation_setup.tree.World.WorldIdentifier.listall()],
             window_title="Choose world",
             label="Please select a world:",
             cancel_option=not initialize  # if initialize is True, we do not want a cancel option
@@ -577,10 +577,10 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
             self.statusBar().showMessage(f"Selected world: {selected_world}")
 
             self.selected_world = selected_world
-            path = pathlib.Path(arena_simulation_setup.world.World(self.selected_world).map.path) / "map.yaml"
+            path = arena_simulation_setup.tree.World.WorldIdentifier(self.selected_world).resolve_sync().map.map_yaml
             if path.is_file():
                 self.setMap(str(path))
-            
+
             self.show_select_scenario_dialog()
         elif result == QtWidgets.QDialog.Rejected:
             self.statusBar().showMessage("Canceled selecting world")
@@ -599,7 +599,7 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
         central_widget = QtWidgets.QWidget()
         central_widget.setLayout(QtWidgets.QGridLayout())
         self.setCentralWidget(central_widget)
-        central_splitter = QtWidgets.QSplitter() # split between left side bar and drawing frame
+        central_splitter = QtWidgets.QSplitter()  # split between left side bar and drawing frame
         central_splitter.setOrientation(QtCore.Qt.Orientation.Horizontal)
 
         # menu bar
@@ -631,7 +631,7 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
         self.gview.scale(0.25, 0.25)  # zoom out a bit
         drawing_frame.layout().addWidget(self.gview)
 
-        # left side bar 
+        # left side bar
         side_bar_splitter = QtWidgets.QSplitter()
         side_bar_splitter.setOrientation(QtCore.Qt.Orientation.Vertical)
         # obstacles
@@ -767,7 +767,7 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
     def generatePedestrianName(self):
         self.lastPedestrianNameId += 1
         return "Pedestrian " + str(self.lastPedestrianNameId)
-    
+
     def generateRobotName(self):
         self.lastRobotNameId += 1
         return "Robot " + str(self.lastRobotNameId)
@@ -819,9 +819,6 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
                 for w in widget.getWaypointWidgets():
                     w.ellipseItem.setSelected(False)
 
-    def onNewScenarioClicked(self):
-        pass
-
     def onOpenClicked(self):
         self.show_select_scenario_dialog(initialize=False)
 
@@ -833,8 +830,8 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
 
     def show_select_scenario_dialog(self, initialize=True):
         dialog = ComboBoxDialog(
-            self, 
-            combo_box_items=arena_simulation_setup.world.World(self.selected_world).scenario.list(),
+            self,
+            combo_box_items=[identifier.name for identifier in arena_simulation_setup.world.World.WorldIdentifier(self.selected_world).resolve_sync().scenario.listall()],
             window_title="Choose scenario",
             label="Please select a scenario:",
             cancel_option=not initialize  # if initialize is True, we do not want a cancel option
@@ -863,7 +860,7 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
 
             self.selected_scenario = selected_scenario
 
-            path = pathlib.Path(arena_simulation_setup.world.World(self.selected_world).scenario.base_dir()) / os.path.join(self.selected_scenario)
+            path = pathlib.Path(arena_simulation_setup.tree.World.WorldIdentifier(self.selected_world).resolve_sync().scenario.base_dir()) / os.path.join(self.selected_scenario)
             if path.is_file():
                 self.loadArenaScenario(str(path))
         elif result == QtWidgets.QDialog.Rejected:
@@ -881,7 +878,7 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
 
     def onSaveAsClicked(self) -> bool:
         dialog = LineEditDialog(
-            self, 
+            self,
             window_title="Save scenario",
             label="Please type a name for your new scenario:",
             placeholder_text="new_scenario.json"
@@ -892,12 +889,13 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
             scenario_name = dialog.get_typed_text()
 
             if scenario_name != "":
-                path = pathlib.Path(arena_simulation_setup.world.World(self.selected_world).scenario.base_dir()) / \
-                        os.path.join(
-                            scenario_name
-                        )
-                
-                if path.is_file(): # File already exist
+                path = pathlib.Path(
+                    arena_simulation_setup.tree.World.WorldIdentifier(self.selected_world).resolve_sync().scenario(scenario_name).resolve_sync().path.base_dir()) / \
+                    os.path.join(
+                    scenario_name
+                )
+
+                if path.is_file():  # File already exist
                     msg_box = QtWidgets.QMessageBox()
                     msg_box.setText(f"The file {scenario_name} already exist, do you want to override it?")
                     msg_box.setStandardButtons(QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Cancel)
@@ -908,7 +906,7 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
                         return self.save(str(path))
                     elif ret == QtWidgets.QMessageBox.Cancel:
                         self.statusBar().showMessage("Canceled save!")
-                        
+
         else:
             print("Dialog was rejected or closed unexpectedly.")
 
@@ -981,4 +979,3 @@ class ArenaScenarioEditor(QtWidgets.QMainWindow):
         # save map path
         if self.mapData is not None:
             self.arenaScenario.mapPath = self.mapData.path
-

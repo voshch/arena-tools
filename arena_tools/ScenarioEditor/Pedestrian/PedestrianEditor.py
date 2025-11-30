@@ -15,9 +15,9 @@ class PedestrianAgentEditor(QtWidgets.QWidget):
         super().__init__(**kwargs)
         self.pedestrianAgentWidget = pedestrianAgentWidget
         if pedestrianAgentWidget is None:
-            self.pedestrianAgent:Pedestrian = Pedestrian('Pedestrian 1')
+            self.pedestrianAgent: Pedestrian = Pedestrian('Pedestrian 1')
         else:
-            self.pedestrianAgent:Pedestrian = pedestrianAgentWidget.pedestrianAgent
+            self.pedestrianAgent: Pedestrian = pedestrianAgentWidget.pedestrianAgent
         self.setup_ui()
         self.updateValuesFromPedestrianAgent()
 
@@ -83,7 +83,7 @@ class PedestrianAgentEditor(QtWidgets.QWidget):
         self.scrollAreaFrame.layout().addWidget(model_label, self.vertical_idx, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
         # dropdown
         self.modelComboBox = QtWidgets.QComboBox()
-        for index, agent_model in enumerate(arena_simulation_setup.entities.obstacles.dynamic.DynamicObstacle.list()):
+        for index, agent_model in enumerate(arena_simulation_setup.tree.assets.Pedestrian.PedestrianIdentifier.listall()):
             self.modelComboBox.insertItem(index, agent_model)
         self.modelComboBox.setFixedSize(200, 30)
         self.modelComboBox.currentIndexChanged.connect(self.updateWidgetsFromSelectedModel)
@@ -133,7 +133,7 @@ class PedestrianAgentEditor(QtWidgets.QWidget):
 
         self.name_edit.setText(self.pedestrianAgent.name)
         # custom properties
-        self.custom_properties:list[dict] = copy.deepcopy(self.pedestrianAgent.custom_properties)
+        self.custom_properties: list[dict] = copy.deepcopy(self.pedestrianAgent.custom_properties)
         # clear the cpScrollAreaFrame
         if self.cpScrollAreaFrame.layout():
             for idx in range(self.cpScrollAreaFrame.layout().count()):
@@ -142,8 +142,8 @@ class PedestrianAgentEditor(QtWidgets.QWidget):
                 if item is not None and isinstance(item.widget(), CustomPropertyWidget):
                     self.cpScrollAreaFrame.layout().removeWidget(item.widget())
                     # item.widget().deleteLater()
-        
-        if len (self.custom_properties) > 0:
+
+        if len(self.custom_properties) > 0:
             for property in self.custom_properties:
                 # name editbox
                 property_name = list(property.keys())[0]
@@ -188,14 +188,13 @@ class PedestrianAgentEditor(QtWidgets.QWidget):
             elif ret == QtWidgets.QMessageBox.Cancel:
                 event.ignore()
 
-
     def onAddCustomPropertyClicked(self):
         self.addCustomPropertyWidget()
 
-    def addCustomPropertyWidget(self, property_name:Optional[str]="", property_value:Optional[str]="", property_type:Optional[str]="str"):
+    def addCustomPropertyWidget(self, property_name: Optional[str] = "", property_value: Optional[str] = "", property_type: Optional[str] = "str"):
         w = CustomPropertyWidget(self, property_name, property_value, property_type, parent=self)
         self.cpScrollAreaFrame.layout().addWidget(w, )
-        self.custom_properties.append({property_name:property_value})
+        self.custom_properties.append({property_name: property_value})
         self.vertical_idx += 1
 
     def removeCustomProperty(self, customPropertyWidget: CustomPropertyWidget):

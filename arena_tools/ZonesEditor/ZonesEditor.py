@@ -373,8 +373,8 @@ class ZonesEditor(QtWidgets.QMainWindow):
 
     def show_select_world_dialog(self):
         dialog = ComboBoxDialog(
-            self, 
-            combo_box_items=arena_simulation_setup.world.World.list(),
+            self,
+            combo_box_items=arena_simulation_setup.tree.World.WorldIdentifier.listall(),
             window_title="Choose world",
             label="Please select a world:"
         )
@@ -389,7 +389,7 @@ class ZonesEditor(QtWidgets.QMainWindow):
             path = pathlib.Path(arena_simulation_setup.world.World(self.selected_world).map.path) / "map.yaml"
             if path.is_file():
                 self.setMap(str(path))
-            
+
         else:
             print("Dialog was rejected or closed unexpectedly.")
 
@@ -551,7 +551,7 @@ class ZonesEditor(QtWidgets.QMainWindow):
 
     def onSaveAsClicked(self) -> bool:
         path = pathlib.Path(arena_simulation_setup.world.World(self.selected_world).map.zones)
-        if path!= "":
+        if path != "":
             self.statusBar().showMessage(f"Saved at: {str(path)}")
             return self.save(str(path))
 
@@ -607,5 +607,3 @@ class ZonesEditor(QtWidgets.QMainWindow):
 
     def updateWindowTitle(self):
         self.setWindowTitle(((self.currentDirectory.rsplit("/", 1)[1] + " - ") if self.currentDirectory else "") + (self.currentSaveFile + " - " if self.currentSaveFile else "") + "Zones Editor")
-
-
