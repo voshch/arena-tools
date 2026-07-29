@@ -42,14 +42,14 @@ https://user-images.githubusercontent.com/74921738/130034174-fa6b334b-e220-47ea-
 >- Generate maps in bulk by setting **Number of Maps**
 >- Each map will be saved in its own folder. Folders will be named like "map[number]". [number] will be incremented starting from the highest number that already exists in the folder, so as not to overwrite any existing maps.
 
-2. If you wish to create Gazebo worlds for all of the generated maps click on the 'Convert existing maps into Gazebo worlds' button, which automates the process, provided you followed the installation steps. Otherwise, you can have a look [here](map_to_gazebo/map_to_gazebo.md) on how to achieve this manually with the help of Blender. Below you can find a short summary
+2. If you wish to create Gazebo worlds for all of the generated maps click on the 'Convert existing maps into Gazebo worlds' button, which automates the process, provided you followed the installation steps. Otherwise, you can have a look [here](../.old/map_to_gazebo/map_to_gazebo.md) on how to achieve this manually with the help of Blender. Below you can find a short summary
 
-<img src="map_to_gazebo/example-videos/short-map-to-svg.gif">
+<img src="../.old/map_to_gazebo/example-videos/short-map-to-svg.gif">
 
 
 
 # Scenario Editor
-![](img/scenario_editor.png)
+![](../img/scenario_editor.png)
 Scenario Editor is a tool to create scenarios for use in Arena-Rosnav. Run it using Python:
 ```bash
 roscd arena-tools && python ArenaScenarioEditor.py
