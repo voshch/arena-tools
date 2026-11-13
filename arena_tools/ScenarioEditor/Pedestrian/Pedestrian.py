@@ -41,7 +41,7 @@ class Pedestrian:
         self.id = 0
         self.pos = np.zeros(3)
         self.type = "adult"
-        self.model = "actor1"
+        self.model = "arenian"
         self.custom_properties:list[dict] = []
 
         self.waypoints = []  # list of 2D numpy arrays
